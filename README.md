@@ -5,5 +5,5 @@ Just throw the code into a Chrome bookmark (creating a Bookmarklet), and click i
 You may have to open the "chrome://bookmarks" page and add it there. There seems to be a character limit if you just right-click the bookmarks bar and attempt to add it there.
 
 Credits:
-Lake Straly
+Lake Straly,
 Logan Straly
