@@ -8,6 +8,16 @@ javascript: (() => {
     /* Create locations.json URL */
     let locationsJsonUrl = 'https://hub.g5marketingcloud.com/admin/clients/' + clientUrn.innerText + '/locations.json';
 
+    function sanitizeDomain(url) {
+        const domainRegex = /^(\w+:\/\/[^\/]+)(.*)/;
+        const matches = url.match(domainRegex);
+        const domain = matches[1];
+        let path = matches[2];
+        path = path.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
+        const modifiedUrl = domain + path;
+        return modifiedUrl.toLowerCase();
+    }
+
     /* Get JSON data from above built URL */
     async function getJsonData(url) {
         let fetchResult = await fetch(url);
@@ -97,18 +107,13 @@ javascript: (() => {
         let lowerCaseStaticUrls = [];
         let lowerCaseStagingUrls = [];
         for (let i = 0; i < liveUrls.length; i++) {
-            lowerCaseLiveUrls.push(liveUrls[i].replace(' ', '-').toLowerCase());
+            lowerCaseLiveUrls.push(sanitizeDomain(liveUrls[i]));
         }
         for (let i = 0; i < staticUrls.length; i++) {
-            lowerCaseStaticUrls.push(staticUrls[i].replace(' ', '-').toLowerCase());
+            lowerCaseStaticUrls.push(sanitizeDomain(staticUrls[i]));
         }
         for (let i = 0; i < stagingUrls.length; i++) {
-            lowerCaseStagingUrls.push(stagingUrls[i].replace(' ', '-').toLowerCase());
-        }
-
-        let testArr = [];
-        for (let i = 0; i < lowerCaseLiveUrls.length; i++) {
-            testArr += lowerCaseLiveUrls[i] + '\n';
+            lowerCaseStagingUrls.push(sanitizeDomain(stagingUrls[i]));
         }
         /* Open blank web page with all of the URLs collected */
         var newWindow = window.open();
@@ -242,25 +247,31 @@ javascript: (() => {
           <div class="liveUrls url-container">
           <h2>Live URLs</h2><button onclick="copyAllLiveUrls()">Copy All</button>
           <div style="text-align: center;">
-            <ol>
-                ${lowerCaseLiveUrls.map(url => `<li class="url"><a target="_blank" href="${url}">${url}</a><button onclick="copyToClipboard('${url}')">Copy</button></li>`).join('')}
-            </ol>
+            <ol>`;
+        for (let i = 0; i < lowerCaseLiveUrls.length; i++) {
+            htmlContent += `<li class="url"><a target="_blank" href="${lowerCaseLiveUrls[i]}">${lowerCaseLiveUrls[i]}</a><button onclick="copyToClipboard('${lowerCaseLiveUrls[i]}')">Copy</button></li>`
+        }
+        htmlContent += `</ol>
           </div>
           </div>
           <div class="staticUrls url-container">
           <h2>Static URLs</h2><button onclick="copyAllStaticUrls()">Copy All</button>
           <div style="text-align: center;">
-            <ol>
-                ${lowerCaseStaticUrls.map(url => `<li class="url"><a target="_blank" href="${url}">${url}</a><button onclick="copyToClipboard('${url}')">Copy</button></li>`).join('')}
-            </ol>
+          <ol>`;
+        for (let i = 0; i < lowerCaseStaticUrls.length; i++) {
+            htmlContent += `<li class="url"><a target="_blank" href="${lowerCaseStaticUrls[i]}">${lowerCaseStaticUrls[i]}</a><button onclick="copyToClipboard('${lowerCaseStaticUrls[i]}')">Copy</button></li>`
+        }
+        htmlContent += `</ol>
           </div>
           </div>
           <div class="stagingUrls url-container">
           <h2>Staging URLs</h2><button onclick="copyAllStagingUrls()">Copy All</button>
           <div style="text-align: center;">
-            <ol>
-                ${lowerCaseStagingUrls.map(url => `<li class="url"><a target="_blank" href="${url}">${url}</a><button onclick="copyToClipboard('${url}')">Copy</button></li>`).join('')}
-            </ol>
+          <ol>`;
+        for (let i = 0; i < lowerCaseStagingUrls.length; i++) {
+            htmlContent += `<li class="url"><a target="_blank" href="${lowerCaseStagingUrls[i]}">${lowerCaseStagingUrls[i]}</a><button onclick="copyToClipboard('${lowerCaseStagingUrls[i]}')">Copy</button></li>`
+        }
+        htmlContent += `</ol>
           </div>
           </div>
         </div>
@@ -279,7 +290,6 @@ javascript: (() => {
             htmlContent += "'" + lowerCaseLiveUrls[i] + "',";
         }
         htmlContent += `];
-            let liveUrlArrStr = liveUrlArr.join().replace(',', '\\n');
             copyToClipboard(liveUrlArr.join('\\n'));
         }
 
