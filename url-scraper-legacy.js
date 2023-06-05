@@ -89,7 +89,7 @@ javascript: (() => {
 
         /* Build static URLs using the previously built live URLs */
         for (let l = 0; l < liveUrls.length; l++) {
-            let dotSplitLiveUrl = liveUrls[l].split('.')[2];
+            let dotSplitLiveUrl = liveUrls[l].split('.').pop();
             let tld = dotSplitLiveUrl.split('/')[0];
             let nonSecureLiveUrl = liveUrls[l].replace('https', 'http');
             staticUrls.push(nonSecureLiveUrl.replace(tld, tld + '.g5static.com'));
