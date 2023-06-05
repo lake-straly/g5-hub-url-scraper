@@ -233,10 +233,20 @@ javascript: (() => {
                 display: flex;
                 justify-content: space-between;
             }
+            div.headerButton button {
+                font-size: 1.1em;
+                position: relative;
+                margin: 0.5em 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }
           </style>
         </head>
         <body>
             <h1>URL Gatherer</h1>
+            <div class="headerButton">
+                <button onclick="copySelectedUrls()">Copy Selected URLs</button>
+            </div>
             <div class="urlContainer">
                 <table>
                     <tr class="header">
@@ -262,9 +272,9 @@ javascript: (() => {
                             }
                             htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
                             <td>${liveUrls[i].internalName}</td>
-                            <td><div class="url-cell"><a target="_blank" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
-                            <td><div class="url-cell"><a target="_blank" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
-                            <td><div class="url-cell"><a target="_blank" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
+                            <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
+                            <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
+                            <td><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
                         </tr>`;
         }
         htmlContent += `</table>
@@ -330,6 +340,22 @@ javascript: (() => {
                 });
             }
         };
+
+        let checkBoxUrls = [];
+        function createCheckboxArray(checkBox) {
+            let url = checkBox.value;
+            if (checkBox.checked) {
+                checkBoxUrls.push(url);
+            } else {
+                var index = checkBoxUrls.indexOf(url);
+                if (index > -1) {
+                    checkBoxUrls.splice(index, 1);
+                }
+            }
+        }
+        function copySelectedUrls() {
+            copyToClipboard(checkBoxUrls.join('\\n'));
+        }
         </script>
         </body>
         </html>`;
