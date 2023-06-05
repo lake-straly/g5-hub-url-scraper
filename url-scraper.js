@@ -27,7 +27,6 @@ javascript: (() => {
     }
     /* In order to use the data returned by fetch, we have to parse the data in an async function. */
     async function parseJsonData(domainType, clientVertical) {
-
         /* Determine what the vertical is */
         let clientVerticalSlug = '';
         let jsonData = await getJsonData(locationsJsonUrl);
@@ -53,6 +52,7 @@ javascript: (() => {
             let locationDataObj = {
                 name: jsonData[i].name,
                 internalName: jsonData[i].internal_branded_name,
+                status: jsonData[i].status,
                 vertical: clientVerticalSlug,
                 state: jsonData[i].state,
                 city: jsonData[i].city,
@@ -78,6 +78,7 @@ javascript: (() => {
                     let liveUrlsObj = {
                         name: fullLocationData[j].name,
                         internalName: fullLocationData[j].internalName,
+                        status: fullLocationData[j].status,
                         url: 'https://' + fullLocationData[j].naked_domain
                     };
                     liveUrls.push(liveUrlsObj);
@@ -89,6 +90,7 @@ javascript: (() => {
                 if (fullLocationData[k].corporate) {
                     let liveUrlsObj = {
                         name: fullLocationData[k].name,
+                        status: fullLocationData[k].status,
                         internalName: fullLocationData[k].internalName,
                         url: 'https://' + singleDomainDomain
                     };
@@ -97,6 +99,7 @@ javascript: (() => {
                     let liveUrlsObj = {
                         name: fullLocationData[k].name,
                         internalName: fullLocationData[k].internalName,
+                        status: fullLocationData[k].status,
                         url: sanitizeDomain('https://' + singleDomainDomain + '/' + fullLocationData[k].vertical + '/' + fullLocationData[k].state + '/' + fullLocationData[k].city + '/' + fullLocationData[k].custom_slug)
                     };
                     liveUrls.push(liveUrlsObj);
@@ -114,6 +117,7 @@ javascript: (() => {
             let staticUrlsObj = {
                 name: liveUrls[l].name,
                 internalName: fullLocationData[l].internalName,
+                status: fullLocationData[l].status,
                 url: sanitizeDomain(nonSecureLiveUrl.replace(tld, tld + '.g5static.com'))
             };
             staticUrls.push(staticUrlsObj);
@@ -126,10 +130,16 @@ javascript: (() => {
             let stagingUrlsObj = {
                 name: liveUrls[m].name,
                 internalName: fullLocationData[m].internalName,
+                status: fullLocationData[m].status,
                 url: sanitizeDomain(nonSecureStatic.replace(mainDomain, mainDomain + '-staging'))
             };
             stagingUrls.push(stagingUrlsObj);
         }
+
+        /* Create icons for use in the location status */
+        let blankBox = '&#9744;';
+        let checkBox = '&#9745;';
+        let xBox = '&#9746;';
 
         /* Open blank web page with all of the URLs collected */
         var newWindow = window.open();
@@ -154,6 +164,9 @@ javascript: (() => {
             }
             .url-cell a {
                 line-break: anywhere;
+            }
+            .url-cell button {
+                margin-block: auto;
             }
             a {
                 color: var(--primary-clr);
@@ -235,7 +248,19 @@ javascript: (() => {
                     </tr>`;
         for (let i = 0; i < liveUrls.length; i++) {
             htmlContent += `<tr>
-                            <td>${liveUrls[i].name}</td>
+                            <td>`;
+                            let locStatus = '';
+                            switch (liveUrls[i].status) {
+                                case "Live":
+                                    locStatus = checkBox;
+                                    break;
+                                case "Pending":
+                                    locStatus = blankBox;
+                                    break;
+                                case "Deleted":
+                                    locStatus = xBox;
+                            }
+                            htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
                             <td>${liveUrls[i].internalName}</td>
                             <td><div class="url-cell"><a target="_blank" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
                             <td><div class="url-cell"><a target="_blank" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
@@ -243,7 +268,12 @@ javascript: (() => {
                         </tr>`;
         }
         htmlContent += `</table>
-            </div>
+        </div>
+        <div class="legend">
+            ${checkBox} = Live<br>
+            ${blankBox} = Pending<br>
+            ${xBox} = Deleted
+        </div>
         <div class="rp_disclaimer">
             <p>REALPAGE INTERNAL USE ONLY</p>
         </div>
