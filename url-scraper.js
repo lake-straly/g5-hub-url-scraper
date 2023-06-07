@@ -5,8 +5,6 @@ javascript: (() => {
     let domainType = document.querySelector('.p-g5-domain-type');
     /* Get the vertical of the client */
     let clientVertical = document.querySelector('.p-g5-vertical');
-    /* Create locations.json URL */
-    let locationsJsonUrl = 'https://hub.g5marketingcloud.com/admin/clients/' + clientUrn.innerText + '/locations.json';
 
     /* Sanitize domain function. Removes special characters in a domain path, and removes special characters at the end of a domain path if present */
     function sanitizeDomain(url) {
@@ -19,17 +17,48 @@ javascript: (() => {
         return modifiedUrl.toLowerCase();
     }
 
-    /* Get JSON data from above built URL */
+    let pageIteration = 1;
+
+    /* Create locations.json URL */
+    let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
+
+    /* Get JSON data from the specified URL */
     async function getJsonData(url) {
         let fetchResult = await fetch(url);
+        if (!fetchResult.ok) {
+            throw new Error(`Error fetching data from ${url}: ${fetchResult.status} ${fetchResult.statusText}`);
+        }
         let json = await fetchResult.json();
         return json;
     }
+
+    /* Recursive function to fetch data, increase pageIteration, and run again */
+    async function fetchAndStoreData(url, jsonData = []) {
+        try {
+            let json = await getJsonData(url);
+            jsonData.push(...json);
+
+            /* Increase pageIteration */
+            pageIteration++;
+
+            /* Create the next URL with the updated pageIteration */
+            let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
+
+            /* Call the function recursively with the next URL */
+            return fetchAndStoreData(nextUrl, jsonData);
+        } catch (error) {
+            console.error(error);
+            /* Handle the error or terminate the recursive function */
+        }
+
+        return jsonData;
+    }
+
     /* In order to use the data returned by fetch, we have to parse the data in an async function. */
     async function parseJsonData(domainType, clientVertical) {
         /* Determine what the vertical is */
         let clientVerticalSlug = '';
-        let jsonData = await getJsonData(locationsJsonUrl);
+        let jsonData = await fetchAndStoreData(locationsJsonUrl);
         if (clientVertical.innerText.includes('Apartments')) {
             clientVerticalSlug = 'apartments';
         } else if (clientVertical.innerText.includes('Senior')) {
@@ -259,18 +288,18 @@ javascript: (() => {
         for (let i = 0; i < liveUrls.length; i++) {
             htmlContent += `<tr>
                             <td>`;
-                            let locStatus = '';
-                            switch (liveUrls[i].status) {
-                                case "Live":
-                                    locStatus = checkBox;
-                                    break;
-                                case "Pending":
-                                    locStatus = blankBox;
-                                    break;
-                                case "Deleted":
-                                    locStatus = xBox;
-                            }
-                            htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
+            let locStatus = '';
+            switch (liveUrls[i].status) {
+                case "Live":
+                    locStatus = checkBox;
+                    break;
+                case "Pending":
+                    locStatus = blankBox;
+                    break;
+                case "Deleted":
+                    locStatus = xBox;
+            }
+            htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
                             <td>${liveUrls[i].internalName}</td>
                             <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
                             <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
