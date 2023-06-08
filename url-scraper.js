@@ -475,6 +475,7 @@ javascript: (() => {
         </html>`;
         newWindow.document.open();
         newWindow.document.write(htmlContent);
+        newWindow.document.close();
     }
     parseJsonData(domainType, clientVertical);
 })();
