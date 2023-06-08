@@ -18,8 +18,6 @@ javascript: (() => {
     }
 
     let pageIteration = 1;
-
-    /* Create locations.json URL */
     let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
 
     /* Get JSON data from the specified URL */
@@ -37,20 +35,12 @@ javascript: (() => {
         try {
             let json = await getJsonData(url);
             jsonData.push(...json);
-
-            /* Increase pageIteration */
             pageIteration++;
-
-            /* Create the next URL with the updated pageIteration */
             let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
-
-            /* Call the function recursively with the next URL */
             return fetchAndStoreData(nextUrl, jsonData);
         } catch (error) {
             console.error(error);
-            /* Handle the error or terminate the recursive function */
         }
-
         return jsonData;
     }
 
@@ -204,10 +194,10 @@ javascript: (() => {
                 color: var(--primary-clr-lighten);
             }
             table {
-                border-radius: 15px;
+                border-collapse: collapse;
             }
             table td, table th {
-                border: 1px solid #fff;
+                border: 2px solid #fff;
                 padding: 0.5em;
                 margin: 0;
             }
@@ -223,7 +213,7 @@ javascript: (() => {
                 padding: 0.25em;
                 display: inline;
                 margin-left: 1em;
-                transition: all 0.5s ease-in-out;
+                transition: all 0.25s ease-in-out;
                 user-select: none;
                 -moz-user-select: none;
                 -khtml-user-select: none;
@@ -234,7 +224,7 @@ javascript: (() => {
                 background: var(--primary-clr);
                 border: 1px solid #fff;
                 color: #111;
-                transition: all 0.5s ease-in-out;
+                transition: all 0.25s ease-in-out;
             }
             .urlContainer {
                 width: fit-content;
@@ -270,8 +260,10 @@ javascript: (() => {
                 transform: translateX(-50%);
             }
             .legend {
-                margin-top: 2em;
-                margin-left: 2em;
+                width: fit-content;
+                position: absolute;
+                top: 1em;
+                left: 1em;
             }
           </style>
         </head>
