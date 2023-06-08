@@ -149,7 +149,6 @@ javascript: (() => {
                     liveUrls.push(liveUrlsObj);
                 }
             }
-            console.log(liveUrls);
         } else if (domainType.innerText === 'SingleDomainClient') {
             for (let k = 0; k < fullLocationData.length; k++) {
                 if (fullLocationData[k].corporate) {
@@ -218,20 +217,17 @@ javascript: (() => {
                 --primary-clr-lighten: #DCEBF4;
                 --background-clr: #111;
             }
-            body{
+            body {
                 font-family: sans-serif;
                 background-color: #111;
                 color: #fefefe;
             }
-            h1{
+            h1 {
                 margin: 0 auto;
                 text-align: center;
             }
             .url-cell a {
                 line-break: anywhere;
-            }
-            .url-cell button {
-                margin-block: auto;
             }
             a {
                 color: var(--primary-clr);
@@ -241,6 +237,7 @@ javascript: (() => {
             }
             table {
                 border-collapse: collapse;
+                width: 100%;
             }
             table td, table th {
                 border: 2px solid #fff;
@@ -250,6 +247,9 @@ javascript: (() => {
             table th {
                 font-size: 1.25em;
             }
+            th button {
+                margin-left: 1em;
+            }
             button {
                 height: fit-content;
                 background: transparent;
@@ -258,7 +258,6 @@ javascript: (() => {
                 border-radius: 4px;
                 padding: 0.25em;
                 display: inline;
-                margin-left: 1em;
                 transition: all 0.25s ease-in-out;
                 user-select: none;
                 -moz-user-select: none;
@@ -273,7 +272,8 @@ javascript: (() => {
                 transition: all 0.25s ease-in-out;
             }
             .urlContainer {
-                width: fit-content;
+                max-width: 95vw;
+                width: 100%;
                 margin: 0 auto;
             }
             .rp_disclaimer {
@@ -309,7 +309,7 @@ javascript: (() => {
                 width: fit-content;
                 position: absolute;
                 top: 1em;
-                left: 1em;
+                left: 3vw;
             }
           </style>
         </head>
@@ -342,11 +342,11 @@ javascript: (() => {
                     locStatus = xBox;
             }
             htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
-                            <td>${liveUrls[i].internalName}</td>
-                            <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
-                            <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
-                            <td><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
-                        </tr>`;
+                <td>${liveUrls[i].internalName}</td>
+                <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" class="liveUrl" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
+                <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" class="staticUrl" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
+                <td><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" class="stagingUrl" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
+            </tr>`;
         }
         htmlContent += `</table>
         </div>
@@ -365,32 +365,30 @@ javascript: (() => {
         </div>
         <script type="text/javascript">
         function copyAllLiveUrls() {
-            let liveUrlArr = [`;
-        for (let i = 0; i < liveUrls.length; i++) {
-            htmlContent += "'" + liveUrls[i].url + "',";
-        }
-        htmlContent += `];
-            copyToClipboard(liveUrlArr.join('\\n'));
+            let liveUrlsArr = document.querySelectorAll('a.liveUrl:not(.disabled)');
+            let liveUrls = [];
+            for (let i = 0; i < liveUrlsArr.length; i++) {
+                liveUrls.push(liveUrlsArr[i].innerText);
+            }
+            copyToClipboard(liveUrls.join('\\n'));
         }
 
         function copyAllStaticUrls() {
-            let staticUrlArr = [`;
-        for (let i = 0; i < staticUrls.length; i++) {
-            htmlContent += "'" + staticUrls[i].url + "',";
-        }
-        htmlContent += `];
-            let staticUrlArrStr = staticUrlArr.join().replace(',', '\\n');
-            copyToClipboard(staticUrlArr.join('\\n'));
+            let staticUrlsArr = document.querySelectorAll('a.staticUrl:not(.disabled)');
+            let staticUrls = [];
+            for (let i = 0; i < staticUrlsArr.length; i++) {
+                staticUrls.push(staticUrlsArr[i].innerText);
+            }
+            copyToClipboard(staticUrls.join('\\n'));
         }
 
         function copyAllStagingUrls() {
-            let stagingUrlArr = [`;
-        for (let i = 0; i < stagingUrls.length; i++) {
-            htmlContent += "'" + stagingUrls[i].url + "',";
-        }
-        htmlContent += `];
-            let stagingUrlArrStr = stagingUrlArr.join().replace(',', '\\n');
-            copyToClipboard(stagingUrlArr.join('\\n'));
+            let stagingUrlsArr = document.querySelectorAll('a.stagingUrl:not(.disabled)');
+            let stagingUrls = [];
+            for (let i = 0; i < stagingUrlsArr.length; i++) {
+                stagingUrls.push(stagingUrlsArr[i].innerText);
+            }
+            copyToClipboard(stagingUrls.join('\\n'));
         }
 
         function copyToClipboard(textToCopy) {
@@ -444,28 +442,58 @@ javascript: (() => {
             if (liveLocationCheck.checked) {
                 for (let i = 0; i < liveLocationTr.length; i++) {
                     liveLocationTr[i].style.display = "table-row";
+                    let liveUrlCellArr = liveLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < liveUrlCellArr.length; i++) {
+                        liveUrlCellArr[i].classList.remove('disabled');
+                        liveUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
+                    }
                 }
             } else if (!liveLocationCheck.checked) {
                 for (let i = 0; i < liveLocationTr.length; i++) {
                     liveLocationTr[i].style.display = "none";
+                    let liveUrlCellArr = liveLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < liveUrlCellArr.length; i++) {
+                        liveUrlCellArr[i].classList.add('disabled');
+                        liveUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
+                    }
                 }
             }
             if (pendingLocationCheck.checked) {
                 for (let i = 0; i < pendingLocationTr.length; i++) {
                     pendingLocationTr[i].style.display = "table-row";
+                    let pendingUrlCellArr = pendingLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < pendingUrlCellArr.length; i++) {
+                        pendingUrlCellArr[i].classList.remove('disabled');
+                        pendingUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
+                    }
                 }
             } else if (!pendingLocationCheck.checked) {
                 for (let i = 0; i < pendingLocationTr.length; i++) {
                     pendingLocationTr[i].style.display = "none";
+                    let pendingUrlCellArr = pendingLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < pendingUrlCellArr.length; i++) {
+                        pendingUrlCellArr[i].classList.add('disabled');
+                        pendingUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
+                    }
                 }
             }
             if (deletedLocationCheck.checked) {
                 for (let i = 0; i < deletedLocationTr.length; i++) {
                     deletedLocationTr[i].style.display = "table-row";
+                    let deletedUrlCellArr = deletedLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < deletedUrlCellArr.length; i++) {
+                        deletedUrlCellArr[i].classList.remove('disabled');
+                        deletedUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
+                    }
                 }
             } else if (!deletedLocationCheck.checked) {
                 for (let i = 0; i < deletedLocationTr.length; i++) {
                     deletedLocationTr[i].style.display = "none";
+                    let deletedUrlCellArr = deletedLocationTr[i].querySelectorAll('.url-cell');
+                    for (let i = 0; i < deletedUrlCellArr.length; i++) {
+                        deletedUrlCellArr[i].classList.add('disabled');
+                        deletedUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
+                    }
                 }
             }
         }
