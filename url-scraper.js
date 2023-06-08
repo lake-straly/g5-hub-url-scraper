@@ -1,4 +1,50 @@
 javascript: (() => {
+    function functionStartAlert() {
+        const scraperAlertDiv = document.createElement("div");
+        scraperAlertDiv.setAttribute('id', 'scaperAlertDiv');
+
+        let firstDiv = document.querySelector('body').firstElementChild;
+        document.body.insertBefore(scraperAlertDiv, firstDiv);
+        
+        let scraperText = document.createElement("p");
+        scraperText.innerHTML = "URL Scraper Bookmarklet started<br>It may take some time to finish!";
+        
+        scraperAlertDiv.appendChild(scraperText);
+        scraperText.style.margin = '0';
+
+        scraperAlertDiv.style.fontFamily = '"Open Sans", sans-serif';
+        scraperAlertDiv.style.position = 'fixed';
+        scraperAlertDiv.style.top = '2em';
+        scraperAlertDiv.style.right = '1em';
+        scraperAlertDiv.style.zIndex = '999';
+        scraperAlertDiv.style.textAlign = 'center';
+        scraperAlertDiv.style.borderRadius = '2px';
+        scraperAlertDiv.style.minHeight = '48px';
+        scraperAlertDiv.style.lineHeight = '1.5em';
+        scraperAlertDiv.style.padding = '1.5em';
+        scraperAlertDiv.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2)';
+        scraperAlertDiv.style.maxHeight = '150px';
+        scraperAlertDiv.style.maxWidth = '400px';
+        scraperAlertDiv.style.fontSize = '15px';
+        scraperAlertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
+        scraperAlertDiv.style.cursor = 'pointer';
+
+        scraperAlertDiv.style.opacity = '1';
+        scraperAlertDiv.style.transition = 'opacity 3s';
+
+        setTimeout(() => {
+            scraperAlertDiv.style.opacity = '0';
+            setTimeout(() => {
+                scraperAlertDiv.remove();
+            }, 3000);
+        }, 10000);
+
+        scraperAlertDiv.addEventListener('click', () => {
+            scraperAlertDiv.remove();
+        })
+    }
+    functionStartAlert();
+
     /* Get URN from client Hub page */
     let clientUrn = document.querySelector('.p-g5-urn');
     /* Get the domain type. This is important to determine how the final URLs are constructed */
