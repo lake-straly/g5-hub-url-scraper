@@ -269,6 +269,10 @@ javascript: (() => {
                 left: 50%;
                 transform: translateX(-50%);
             }
+            .legend {
+                margin-top: 2em;
+                margin-left: 2em;
+            }
           </style>
         </head>
         <body>
@@ -286,7 +290,7 @@ javascript: (() => {
                         <th class="table-header">Staging Urls<button onclick="copyAllStagingUrls()">Copy All</button></th>
                     </tr>`;
         for (let i = 0; i < liveUrls.length; i++) {
-            htmlContent += `<tr>
+            htmlContent += `<tr class="${liveUrls[i].status.toLowerCase()}Location">
                             <td>`;
             let locStatus = '';
             switch (liveUrls[i].status) {
@@ -309,9 +313,9 @@ javascript: (() => {
         htmlContent += `</table>
         </div>
         <div class="legend">
-            ${checkBox} = Live<br>
-            ${blankBox} = Pending<br>
-            ${xBox} = Deleted
+            <label for="liveLocationCheck">Enable: </label><input name="liveLocationCheck" id="liveLocationCheck" type="checkbox" checked></input> | ${checkBox} = Live<br>
+            <label for="pendingLocationCheck">Enable: </label><input name="pendingLocationCheck" id="pendingLocationCheck" type="checkbox" checked></input> | ${blankBox} = Pending<br>
+            <label for="deletedLocationCheck">Enable: </label><input name="deletedLocationCheck" id="deletedLocationCheck" type="checkbox"></input> | ${xBox} = Deleted
         </div>
         <div class="rp_disclaimer">
             <p>REALPAGE INTERNAL USE ONLY</p>
@@ -385,6 +389,49 @@ javascript: (() => {
         function copySelectedUrls() {
             copyToClipboard(checkBoxUrls.join('\\n'));
         }
+
+        let liveLocationCheck = document.getElementById('liveLocationCheck');
+        let pendingLocationCheck = document.getElementById('pendingLocationCheck');
+        let deletedLocationCheck = document.getElementById('deletedLocationCheck');
+
+        liveLocationCheck.addEventListener('click', updateLocationLinks);
+        pendingLocationCheck.addEventListener('click', updateLocationLinks);
+        deletedLocationCheck.addEventListener('click', updateLocationLinks);
+
+        let liveLocationTr = document.querySelectorAll('.liveLocation');
+        let pendingLocationTr = document.querySelectorAll('.pendingLocation');
+        let deletedLocationTr = document.querySelectorAll('.deletedLocation');
+
+        function updateLocationLinks() {
+            if (liveLocationCheck.checked) {
+                for (let i = 0; i < liveLocationTr.length; i++) {
+                    liveLocationTr[i].style.display = "table-row";
+                }
+            } else if (!liveLocationCheck.checked) {
+                for (let i = 0; i < liveLocationTr.length; i++) {
+                    liveLocationTr[i].style.display = "none";
+                }
+            }
+            if (pendingLocationCheck.checked) {
+                for (let i = 0; i < pendingLocationTr.length; i++) {
+                    pendingLocationTr[i].style.display = "table-row";
+                }
+            } else if (!pendingLocationCheck.checked) {
+                for (let i = 0; i < pendingLocationTr.length; i++) {
+                    pendingLocationTr[i].style.display = "none";
+                }
+            }
+            if (deletedLocationCheck.checked) {
+                for (let i = 0; i < deletedLocationTr.length; i++) {
+                    deletedLocationTr[i].style.display = "table-row";
+                }
+            } else if (!deletedLocationCheck.checked) {
+                for (let i = 0; i < deletedLocationTr.length; i++) {
+                    deletedLocationTr[i].style.display = "none";
+                }
+            }
+        }
+        updateLocationLinks();
         </script>
         </body>
         </html>`;
