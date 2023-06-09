@@ -305,7 +305,7 @@ javascript: (() => {
           </style>
         </head>
         <body>
-            <h1>URL Gatherer</h1>
+            <h1>URL Scraper</h1>
             <div class="headerButton">
                 <button onclick="copySelectedUrls()">Copy Selected Cells</button>
             </div>
