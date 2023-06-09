@@ -1,46 +1,39 @@
 javascript: (() => {
     function functionStartAlert() {
-        const scraperAlertDiv = document.createElement("div");
-        scraperAlertDiv.setAttribute('id', 'scaperAlertDiv');
-
+        const alertDiv = document.createElement("div");
+        alertDiv.setAttribute('id', 'alertDiv');
         let firstDiv = document.querySelector('body').firstElementChild;
-        document.body.insertBefore(scraperAlertDiv, firstDiv);
-        
-        let scraperText = document.createElement("p");
-        scraperText.innerHTML = "URL Scraper Bookmarklet started<br>It may take some time to finish!";
-        
-        scraperAlertDiv.appendChild(scraperText);
-        scraperText.style.margin = '0';
-
-        scraperAlertDiv.style.fontFamily = '"Open Sans", sans-serif';
-        scraperAlertDiv.style.position = 'fixed';
-        scraperAlertDiv.style.top = '2em';
-        scraperAlertDiv.style.right = '1em';
-        scraperAlertDiv.style.zIndex = '999';
-        scraperAlertDiv.style.textAlign = 'center';
-        scraperAlertDiv.style.borderRadius = '2px';
-        scraperAlertDiv.style.minHeight = '48px';
-        scraperAlertDiv.style.lineHeight = '1.5em';
-        scraperAlertDiv.style.padding = '1.5em';
-        scraperAlertDiv.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2)';
-        scraperAlertDiv.style.maxHeight = '150px';
-        scraperAlertDiv.style.maxWidth = '400px';
-        scraperAlertDiv.style.fontSize = '15px';
-        scraperAlertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
-        scraperAlertDiv.style.cursor = 'pointer';
-
-        scraperAlertDiv.style.opacity = '1';
-        scraperAlertDiv.style.transition = 'opacity 3s';
-
+        document.body.insertBefore(alertDiv, firstDiv);
+        let alertText = document.createElement("p");
+        alertText.innerHTML = "URL Scraper Bookmarklet started<br>It may take some time to finish!";
+        alertDiv.appendChild(alertText);
+        alertText.style.margin = '0';
+        alertDiv.style.fontFamily = '"Open Sans", sans-serif';
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '2em';
+        alertDiv.style.right = '1em';
+        alertDiv.style.zIndex = '999';
+        alertDiv.style.textAlign = 'center';
+        alertDiv.style.borderRadius = '2px';
+        alertDiv.style.minHeight = '48px';
+        alertDiv.style.lineHeight = '1.5em';
+        alertDiv.style.padding = '1.5em';
+        alertDiv.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2)';
+        alertDiv.style.maxHeight = '150px';
+        alertDiv.style.maxWidth = '400px';
+        alertDiv.style.fontSize = '15px';
+        alertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
+        alertDiv.style.cursor = 'pointer';
+        alertDiv.style.opacity = '1';
+        alertDiv.style.transition = 'opacity 3s';
         setTimeout(() => {
-            scraperAlertDiv.style.opacity = '0';
+            alertDiv.style.opacity = '0';
             setTimeout(() => {
-                scraperAlertDiv.remove();
+                alertDiv.remove();
             }, 3000);
         }, 10000);
-
-        scraperAlertDiv.addEventListener('click', () => {
-            scraperAlertDiv.remove();
+        alertDiv.addEventListener('click', () => {
+            alertDiv.remove();
         })
     }
     functionStartAlert();
@@ -200,16 +193,9 @@ javascript: (() => {
             stagingUrls.push(stagingUrlsObj);
         }
 
-        /* Create icons for use in the location status */
-        let blankBox = '&#9744;';
-        let checkBox = '&#9745;';
-        let xBox = '&#9746;';
-
         /* Open blank web page with all of the URLs collected */
         var newWindow = window.open();
-        var htmlContent = `<!DOCTYPE html>
-        <html>
-        <head>
+        var htmlContent = `<!DOCTYPE html><html><head>
           <title>URL Scraper</title>
           <link rel="icon" type="image/x-icon" href="https://g5-assets-cld-res.cloudinary.com/image/upload/q_auto,f_auto,fl_lossy/e_colorize,co_white/v1686244719/g5/g5-c-5jqt5m1l7-g5-wis-team-cms/g5-cl-1lshjewwoa-g5-wis-team-cms-test-bed-bend-or/uploads/scraper_zjeifx.png">
           <style>
@@ -295,9 +281,13 @@ javascript: (() => {
                 font-size: 0.45em;
                 color: #fff;
             }
-            .url-cell {
+            .url-cell, .name-cell {
                 display: flex;
-                justify-content: space-between;
+                align-items: center;
+            }
+            .name-cell button, .url-cell button {
+                margin-left: auto;
+                margin-right: 0;
             }
             div.headerButton button {
                 font-size: 1.1em;
@@ -317,11 +307,12 @@ javascript: (() => {
         <body>
             <h1>URL Gatherer</h1>
             <div class="headerButton">
-                <button onclick="copySelectedUrls()">Copy Selected URLs</button>
+                <button onclick="copySelectedUrls()">Copy Selected Cells</button>
             </div>
             <div class="urlContainer">
                 <table>
                     <tr class="header">
+                        <th class="table-header">Status</th>
                         <th class="table-header">Name</th>
                         <th class="table-header">Internal Name</th>
                         <th class="table-header">Live Urls<button onclick="copyAllLiveUrls()">Copy All</button></th>
@@ -330,20 +321,15 @@ javascript: (() => {
                     </tr>`;
         for (let i = 0; i < liveUrls.length; i++) {
             htmlContent += `<tr class="${liveUrls[i].status.toLowerCase()}Location">
-                            <td>`;
-            let locStatus = '';
-            switch (liveUrls[i].status) {
-                case "Live":
-                    locStatus = checkBox;
-                    break;
-                case "Pending":
-                    locStatus = blankBox;
-                    break;
-                case "Deleted":
-                    locStatus = xBox;
-            }
-            htmlContent += `${locStatus} - ${liveUrls[i].name}</td>
-                <td>${liveUrls[i].internalName}</td>
+                <td><div class="status-cell"><div class="${liveUrls[i].status.toLowerCase()}StatusCell">${liveUrls[i].status}</div></div></td>
+                <td><div class="name-cell"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].name}"></input>${liveUrls[i].name}<button onclick="copyToClipboard('${liveUrls[i].name}')">Copy</button></td></div>
+                <td><div class="name-cell">`;
+                if (liveUrls[i].internalName !== null) {
+                    if (liveUrls[i].internalName.length > 0) {
+                        htmlContent += `<input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].internalName}"></input>${liveUrls[i].internalName}<button onclick="copyToClipboard('${liveUrls[i].internalName}')">Copy</button>`
+                    }
+                }
+                htmlContent += `</td></div>
                 <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" class="liveUrl" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
                 <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" class="staticUrl" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
                 <td><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" class="stagingUrl" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
@@ -351,13 +337,13 @@ javascript: (() => {
         }
         htmlContent += `</table>
         </div>
-        <div class="legend">
-            <label for="liveLocationCheck">Enable: </label><input name="liveLocationCheck" id="liveLocationCheck" type="checkbox" checked></input> | ${checkBox} = Live<br>
-            <label for="pendingLocationCheck">Enable: </label><input name="pendingLocationCheck" id="pendingLocationCheck" type="checkbox" checked></input> | ${blankBox} = Pending<br>
-            <label for="deletedLocationCheck">Enable: </label><input name="deletedLocationCheck" id="deletedLocationCheck" type="checkbox"></input> | ${xBox} = Deleted
-        </div>
         <div class="rp_disclaimer">
             <p>REALPAGE INTERNAL USE ONLY</p>
+        </div>
+        <div class="legend">
+            <label for="liveLocationCheck">Enable: </label><input name="liveLocationCheck" id="liveLocationCheck" type="checkbox" checked></input>Live<br>
+            <label for="pendingLocationCheck">Enable: </label><input name="pendingLocationCheck" id="pendingLocationCheck" type="checkbox" checked></input>Pending<br>
+            <label for="deletedLocationCheck">Enable: </label><input name="deletedLocationCheck" id="deletedLocationCheck" type="checkbox"></input>Deleted
         </div>
         <div class="credits">
             <p class="credits-header">Tool created by:</p>
@@ -499,9 +485,7 @@ javascript: (() => {
             }
         }
         updateLocationLinks();
-        </script>
-        </body>
-        </html>`;
+        </script></body></html>`;
         newWindow.document.open();
         newWindow.document.write(htmlContent);
         newWindow.document.close();
