@@ -23,6 +23,7 @@ javascript: (() => {
         alertDiv.style.maxWidth = '400px';
         alertDiv.style.fontSize = '15px';
         alertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
+        alertDiv.style.color = '#ffffff';
         alertDiv.style.cursor = 'pointer';
         alertDiv.style.opacity = '1';
         alertDiv.style.transition = 'opacity 3s';
@@ -47,13 +48,17 @@ javascript: (() => {
 
     /* Sanitize domain function. Removes special characters in a domain path, and removes special characters at the end of a domain path if present */
     function sanitizeDomain(url) {
-        const domainRegex = /^(\w+:\/\/[^\/]+)(.*)/;
-        const matches = url.match(domainRegex);
-        const domain = matches[1];
-        let path = matches[2];
-        path = path.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
-        const modifiedUrl = domain + path;
-        return modifiedUrl.toLowerCase();
+        if (url.length <= 0 || url === null || url == '' || url === undefined) {
+            return 'undefined';
+        } else {
+            const domainRegex = /^(\w+:\/\/[^\/]+)(.*)/;
+            const matches = url.match(domainRegex);
+            const domain = matches[1];
+            let path = matches[2];
+            path = path.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
+            const modifiedUrl = domain + path;
+            return modifiedUrl.toLowerCase();
+        }
     }
 
     let pageIteration = 1;
@@ -128,7 +133,14 @@ javascript: (() => {
         if (domainType.innerText === 'MultiDomainClient') {
             for (let j = 0; j < fullLocationData.length; j++) {
                 if (fullLocationData[j].naked_domain === null || fullLocationData[j].naked_domain === '') {
-                    console.log(`${fullLocationData[j].name} does not have a valid domain.`)
+                    console.log(`${fullLocationData[j].name} does not have a valid domain.`);
+                    let invalidLiveUrlsObj = {
+                        name: fullLocationData[j].name,
+                        internalName: fullLocationData[j].internalName,
+                        status: fullLocationData[j].status,
+                        url: 'null'
+                    };
+                    liveUrls.push(invalidLiveUrlsObj);
                 } else {
                     if (fullLocationData[j].naked_domain.split('.').length <= 2) {
                         fullLocationData[j].naked_domain = 'www.' + fullLocationData[j].naked_domain;
@@ -168,29 +180,49 @@ javascript: (() => {
 
         /* Build static URLs using the previously built live URLs */
         for (let l = 0; l < liveUrls.length; l++) {
-            let dotSplitLiveUrl = liveUrls[l].url.split('.').pop();
-            let tld = dotSplitLiveUrl.split('/')[0];
-            let nonSecureLiveUrl = liveUrls[l].url.replace('https', 'http');
-            let staticUrlsObj = {
-                name: liveUrls[l].name,
-                internalName: fullLocationData[l].internalName,
-                status: fullLocationData[l].status,
-                url: sanitizeDomain(nonSecureLiveUrl.replace(tld, tld + '.g5static.com'))
-            };
-            staticUrls.push(staticUrlsObj);
+            if (liveUrls[l].url == 'null') {
+                let staticUrlsObj = {
+                    name: liveUrls[l].name,
+                    internalName: fullLocationData[l].internalName,
+                    status: fullLocationData[l].status,
+                    url: liveUrls[l].url
+                };
+                staticUrls.push(staticUrlsObj);
+            } else {
+                let dotSplitLiveUrl = liveUrls[l].url.split('.').pop();
+                let tld = dotSplitLiveUrl.split('/')[0];
+                let nonSecureLiveUrl = liveUrls[l].url.replace('https', 'http');
+                let staticUrlsObj = {
+                    name: liveUrls[l].name,
+                    internalName: fullLocationData[l].internalName,
+                    status: fullLocationData[l].status,
+                    url: sanitizeDomain(nonSecureLiveUrl.replace(tld, tld + '.g5static.com'))
+                };
+                staticUrls.push(staticUrlsObj);
+            }
         }
 
         /* Build staging URLs using the previously built live URLs */
         for (let m = 0; m < staticUrls.length; m++) {
-            let mainDomain = staticUrls[m].url.split('.')[1];
-            let nonSecureStatic = staticUrls[m].url.replace('https', 'http');
-            let stagingUrlsObj = {
-                name: liveUrls[m].name,
-                internalName: fullLocationData[m].internalName,
-                status: fullLocationData[m].status,
-                url: sanitizeDomain(nonSecureStatic.replace(mainDomain, mainDomain + '-staging'))
-            };
-            stagingUrls.push(stagingUrlsObj);
+            if (liveUrls[m].url == 'null') {
+                let stagingUrlsObj = {
+                    name: liveUrls[m].name,
+                    internalName: fullLocationData[m].internalName,
+                    status: fullLocationData[m].status,
+                    url: liveUrls[m].url
+                };
+                stagingUrls.push(stagingUrlsObj);
+            } else {
+                let mainDomain = staticUrls[m].url.split('.')[1];
+                let nonSecureStatic = staticUrls[m].url.replace('https', 'http');
+                let stagingUrlsObj = {
+                    name: liveUrls[m].name,
+                    internalName: fullLocationData[m].internalName,
+                    status: fullLocationData[m].status,
+                    url: sanitizeDomain(nonSecureStatic.replace(mainDomain, mainDomain + '-staging'))
+                };
+                stagingUrls.push(stagingUrlsObj);
+            }
         }
 
         /* Open blank web page with all of the URLs collected */
@@ -225,6 +257,9 @@ javascript: (() => {
             table {
                 border-collapse: collapse;
                 width: 100%;
+            }
+            td:not(:has(> div.status-cell)) {
+                min-width: 19ch;
             }
             table td, table th {
                 border: 2px solid #fff;
@@ -281,11 +316,11 @@ javascript: (() => {
                 font-size: 0.45em;
                 color: #fff;
             }
-            .url-cell, .name-cell {
+            .url-cell, .name-cell, .undefinedDiv {
                 display: flex;
                 align-items: center;
             }
-            .name-cell button, .url-cell button {
+            .name-cell button, .url-cell button, .undefinedDiv button {
                 margin-left: auto;
                 margin-right: 0;
             }
@@ -299,8 +334,17 @@ javascript: (() => {
             .legend {
                 width: fit-content;
                 position: absolute;
-                top: 1em;
+                top: 7px;
                 left: 3vw;
+            }
+            th div.header-cell {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            p {
+                margin: 0;
+                padding: 0.5em;
             }
           </style>
         </head>
@@ -312,28 +356,37 @@ javascript: (() => {
             <div class="urlContainer">
                 <table>
                     <tr class="header">
-                        <th class="table-header">Status</th>
-                        <th class="table-header">Name</th>
-                        <th class="table-header">Internal Name</th>
-                        <th class="table-header">Live Urls<button onclick="copyAllLiveUrls()">Copy All</button></th>
-                        <th class="table-header">Static Urls<button onclick="copyAllStaticUrls()">Copy All</button></th>
-                        <th class="table-header">Staging Urls<button onclick="copyAllStagingUrls()">Copy All</button></th>
+                        <th class="table-header"><div class="header-cell">Status</div></th>
+                        <th class="table-header"><div class="header-cell">Name<button onclick="copyAllNames()">Copy All</button></div></th>
+                        <th class="table-header"><div class="header-cell">Internal Name<button onclick="copyAllInternalNames()">Copy All</button></div></th>
+                        <th class="table-header"><div class="header-cell">Live Urls<button onclick="copyAllLiveUrls()">Copy All</button></div></th>
+                        <th class="table-header"><div class="header-cell">Static Urls<button onclick="copyAllStaticUrls()">Copy All</button></div></th>
+                        <th class="table-header"><div class="header-cell">Staging Urls<button onclick="copyAllStagingUrls()">Copy All</button></div></th>
                     </tr>`;
         for (let i = 0; i < liveUrls.length; i++) {
-            htmlContent += `<tr class="${liveUrls[i].status.toLowerCase()}Location">
-                <td><div class="status-cell"><div class="${liveUrls[i].status.toLowerCase()}StatusCell">${liveUrls[i].status}</div></div></td>
-                <td><div class="name-cell"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].name}"></input>${liveUrls[i].name}<button onclick="copyToClipboard('${liveUrls[i].name}')">Copy</button></td></div>
-                <td><div class="name-cell">`;
-                if (liveUrls[i].internalName !== null) {
-                    if (liveUrls[i].internalName.length > 0) {
-                        htmlContent += `<input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].internalName}"></input>${liveUrls[i].internalName}<button onclick="copyToClipboard('${liveUrls[i].internalName}')">Copy</button>`
-                    }
-                }
-                htmlContent += `</td></div>
-                <td><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" class="liveUrl" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></td></div>
-                <td><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" class="staticUrl" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></td></div>
-                <td><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" class="stagingUrl" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></td></div>
-            </tr>`;
+            if (liveUrls[i].url == 'null') {
+                htmlContent += `<tr class="undefinedLocation ${liveUrls[i].status.toLowerCase()}Location">`
+            } else {
+                htmlContent += `<tr class="${liveUrls[i].status.toLowerCase()}Location">`
+            }
+            htmlContent += `<td><div class="status-cell"><div class="${liveUrls[i].status.toLowerCase()}StatusCell"><div class="info">${liveUrls[i].status}</div></div></div></td>
+            <td><div class="name-cell locName"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].name}"></input><div class="info">${liveUrls[i].name}</div><button onclick="copyToClipboard('${liveUrls[i].name.replace(/'/g, "\\'")}')">Copy</button></td></div>
+            <td><div class="name-cell locInternalName">`;
+            if (liveUrls[i].internalName !== null && liveUrls[i].internalName.length > 0) {
+                htmlContent += `<input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].internalName}"></input><div class="info">${liveUrls[i].internalName}</div><button onclick="copyToClipboard('${liveUrls[i].internalName.replace(/'/g, "\\'")}')">Copy</button>`
+            }
+            htmlContent += `</td></div>`;
+            if (liveUrls[i].url == 'null') {
+                htmlContent += `<td class="liveCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
+                <td class="staticCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
+                <td class="stagingCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
+                </tr>`;    
+            } else {
+                htmlContent += `<td class="liveCell"><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" class="info liveUrl" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></div></td>
+                <td class="staticCell"><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" class="info staticUrl" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></div></td>
+                <td class="stagingCell"><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" class="info stagingUrl" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></div></td>
+                </tr>`;
+            }
         }
         htmlContent += `</table>
         </div>
@@ -343,7 +396,8 @@ javascript: (() => {
         <div class="legend">
             <label for="liveLocationCheck">Enable: </label><input name="liveLocationCheck" id="liveLocationCheck" type="checkbox" checked></input>Live<br>
             <label for="pendingLocationCheck">Enable: </label><input name="pendingLocationCheck" id="pendingLocationCheck" type="checkbox" checked></input>Pending<br>
-            <label for="deletedLocationCheck">Enable: </label><input name="deletedLocationCheck" id="deletedLocationCheck" type="checkbox"></input>Deleted
+            <label for="deletedLocationCheck">Enable: </label><input name="deletedLocationCheck" id="deletedLocationCheck" type="checkbox"></input>Deleted<br>
+            <label for="undefinedLocationCheck">Enable: </label><input name="undefinedLocationCheck" id="undefinedLocationCheck" type="checkbox"></input>Undefined Domain
         </div>
         <div class="credits">
             <p class="credits-header">Tool created by:</p>
@@ -351,26 +405,40 @@ javascript: (() => {
             <p class="credits-name">Logan Straly</p>
         </div>
         <script type="text/javascript">
+        function copyAllNames() {
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .locName .info');
+            let names = [];
+            for (let i = 0; i < namesArr.length; i++) {
+                names.push(namesArr[i].innerText);
+            }
+            copyToClipboard(names.join('\\n'));
+        }
+        function copyAllInternalNames() {
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .locInternalName .info');
+            let names = [];
+            for (let i = 0; i < namesArr.length; i++) {
+                names.push(namesArr[i].innerText);
+            }
+            copyToClipboard(names.join('\\n'));
+        }
         function copyAllLiveUrls() {
-            let liveUrlsArr = document.querySelectorAll('a.liveUrl:not(.disabled)');
+            let liveUrlsArr = document.querySelectorAll('tr:not(.disabled) .liveCell .info');
             let liveUrls = [];
             for (let i = 0; i < liveUrlsArr.length; i++) {
                 liveUrls.push(liveUrlsArr[i].innerText);
             }
             copyToClipboard(liveUrls.join('\\n'));
         }
-
         function copyAllStaticUrls() {
-            let staticUrlsArr = document.querySelectorAll('a.staticUrl:not(.disabled)');
+            let staticUrlsArr = document.querySelectorAll('tr:not(.disabled) .staticCell .info');
             let staticUrls = [];
             for (let i = 0; i < staticUrlsArr.length; i++) {
                 staticUrls.push(staticUrlsArr[i].innerText);
             }
             copyToClipboard(staticUrls.join('\\n'));
         }
-
         function copyAllStagingUrls() {
-            let stagingUrlsArr = document.querySelectorAll('a.stagingUrl:not(.disabled)');
+            let stagingUrlsArr = document.querySelectorAll('tr:not(.disabled) .stagingCell .info');
             let stagingUrls = [];
             for (let i = 0; i < stagingUrlsArr.length; i++) {
                 stagingUrls.push(stagingUrlsArr[i].innerText);
@@ -416,71 +484,61 @@ javascript: (() => {
         let liveLocationCheck = document.getElementById('liveLocationCheck');
         let pendingLocationCheck = document.getElementById('pendingLocationCheck');
         let deletedLocationCheck = document.getElementById('deletedLocationCheck');
+        let undefinedLocationCheck = document.getElementById('undefinedLocationCheck');
 
         liveLocationCheck.addEventListener('click', updateLocationLinks);
         pendingLocationCheck.addEventListener('click', updateLocationLinks);
         deletedLocationCheck.addEventListener('click', updateLocationLinks);
+        undefinedLocationCheck.addEventListener('click', updateLocationLinks);
 
-        let liveLocationTr = document.querySelectorAll('.liveLocation');
-        let pendingLocationTr = document.querySelectorAll('.pendingLocation');
-        let deletedLocationTr = document.querySelectorAll('.deletedLocation');
+        let liveLocationTr = document.querySelectorAll('tr.liveLocation');
+        let pendingLocationTr = document.querySelectorAll('tr.pendingLocation');
+        let deletedLocationTr = document.querySelectorAll('tr.deletedLocation');
+        let undefinedLocationTr = document.querySelectorAll('tr.undefinedLocation');
 
         function updateLocationLinks() {
             if (liveLocationCheck.checked) {
                 for (let i = 0; i < liveLocationTr.length; i++) {
                     liveLocationTr[i].style.display = "table-row";
-                    let liveUrlCellArr = liveLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < liveUrlCellArr.length; i++) {
-                        liveUrlCellArr[i].classList.remove('disabled');
-                        liveUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
-                    }
+                    liveLocationTr[i].classList.remove('disabled');
                 }
             } else if (!liveLocationCheck.checked) {
                 for (let i = 0; i < liveLocationTr.length; i++) {
                     liveLocationTr[i].style.display = "none";
-                    let liveUrlCellArr = liveLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < liveUrlCellArr.length; i++) {
-                        liveUrlCellArr[i].classList.add('disabled');
-                        liveUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
-                    }
+                    liveLocationTr[i].classList.add('disabled');
                 }
             }
             if (pendingLocationCheck.checked) {
                 for (let i = 0; i < pendingLocationTr.length; i++) {
                     pendingLocationTr[i].style.display = "table-row";
-                    let pendingUrlCellArr = pendingLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < pendingUrlCellArr.length; i++) {
-                        pendingUrlCellArr[i].classList.remove('disabled');
-                        pendingUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
-                    }
+                    pendingLocationTr[i].classList.remove('disabled');
                 }
             } else if (!pendingLocationCheck.checked) {
                 for (let i = 0; i < pendingLocationTr.length; i++) {
                     pendingLocationTr[i].style.display = "none";
-                    let pendingUrlCellArr = pendingLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < pendingUrlCellArr.length; i++) {
-                        pendingUrlCellArr[i].classList.add('disabled');
-                        pendingUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
-                    }
+                    pendingLocationTr[i].classList.add('disabled');
                 }
             }
             if (deletedLocationCheck.checked) {
                 for (let i = 0; i < deletedLocationTr.length; i++) {
                     deletedLocationTr[i].style.display = "table-row";
-                    let deletedUrlCellArr = deletedLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < deletedUrlCellArr.length; i++) {
-                        deletedUrlCellArr[i].classList.remove('disabled');
-                        deletedUrlCellArr[i].firstElementChild.nextElementSibling.classList.remove('disabled');
-                    }
+                    deletedLocationTr[i].classList.remove('disabled');
                 }
             } else if (!deletedLocationCheck.checked) {
                 for (let i = 0; i < deletedLocationTr.length; i++) {
                     deletedLocationTr[i].style.display = "none";
-                    let deletedUrlCellArr = deletedLocationTr[i].querySelectorAll('.url-cell');
-                    for (let i = 0; i < deletedUrlCellArr.length; i++) {
-                        deletedUrlCellArr[i].classList.add('disabled');
-                        deletedUrlCellArr[i].firstElementChild.nextElementSibling.classList.add('disabled');
-                    }
+                    deletedLocationTr[i].classList.add('disabled');
+                }
+            }
+            if (undefinedLocationCheck.checked) {
+                for (let i = 0; i < undefinedLocationTr.length; i++) {
+                    undefinedLocationTr[i].style.display = "table-row";
+                    undefinedLocationTr[i].classList.remove('disabled');
+                }
+            } else if (!undefinedLocationCheck.checked) {
+                for (let i = 0; i < undefinedLocationTr.length; i++) {
+                    undefinedLocationTr[i].style.display = "none";
+                    undefinedLocationTr[i].classList.add('disabled');
                 }
             }
         }
