@@ -2,10 +2,13 @@ javascript: (() => {
     function functionStartAlert() {
         const alertDiv = document.createElement("div");
         alertDiv.setAttribute('id', 'alertDiv');
+
         let firstDiv = document.querySelector('body').firstElementChild;
         document.body.insertBefore(alertDiv, firstDiv);
+
         let alertText = document.createElement("p");
-        alertText.innerHTML = "URL Scraper Bookmarklet started<br>It may take some time to finish!";
+        alertText.innerHTML = 'Hub Scraper started<br>It may take some time!<br>This alert will disappear when it is finised.<br><div class="cssLoader"></div>';
+
         alertDiv.appendChild(alertText);
         alertText.style.margin = '0';
         alertDiv.style.fontFamily = '"Open Sans", sans-serif';
@@ -22,22 +25,47 @@ javascript: (() => {
         alertDiv.style.maxHeight = '150px';
         alertDiv.style.maxWidth = '400px';
         alertDiv.style.fontSize = '15px';
+        alertDiv.style.color = 'white';
         alertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
-        alertDiv.style.color = '#ffffff';
         alertDiv.style.cursor = 'pointer';
+        alertDiv.style.transition = 'opacity 3s ease-in-out';
         alertDiv.style.opacity = '1';
-        alertDiv.style.transition = 'opacity 3s';
-        setTimeout(() => {
-            alertDiv.style.opacity = '0';
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        }, 10000);
+
         alertDiv.addEventListener('click', () => {
             alertDiv.remove();
-        })
+        });
+
+        var css = `.cssLoader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin-inline: auto;
+            margin-top: 1em;
+        }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }`,
+        head = document.head || document.getElementsByTagName('head')[0],
+        style = document.createElement('style');
+        head.appendChild(style);
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode(css));
     }
     functionStartAlert();
+
+    function clearAlert() {
+        let alertDiv = document.getElementById('alertDiv');
+        alertDiv.style.transition = 'opacity 1s ease-in-out';
+        alertDiv.style.opacity = '0';
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
 
     /* Get URN from client Hub page */
     let clientUrn = document.querySelector('.p-g5-urn');
@@ -311,6 +339,7 @@ javascript: (() => {
                 padding: 1em;
                 background-color: transparent;
                 font-size: 0.65em;
+                margin-top: 1em;
             }
             .credits {
                 font-size: 0.45em;
@@ -351,7 +380,7 @@ javascript: (() => {
                 right: 0;
                 bottom: 0;
                 height: 123px;
-                width: 17px;
+                width: 25px;
             }
             .sticky-nav {
                 position: fixed;
@@ -367,13 +396,13 @@ javascript: (() => {
                 border-radius: 27px;
                 padding: 5px;
                 transform: translateX(70px);
-                transition: 1s transform ease-in-out, 5s opacity ease-in-out;
+                transition: 0.5s transform ease-in-out, 5s opacity ease-in-out;
             }
             .stickyNavHoverDiv:hover .sticky-nav {
                 opacity: 1;
                 right: 10px;
                 transform: translateX(0px);
-                transition: 1s transform ease-in-out;
+                transition: 0.5s transform ease-in-out;
             }
             .sticky-nav div {
                 width: 46px;
@@ -398,15 +427,15 @@ javascript: (() => {
                 bottom: 37.5px;
                 right: 65px;
                 background-color: var(--primary-clr);
-                clip-path: polygon(25% 0, 100% 0, 100% 100%, 25% 100%, 0% 85%, 0% 15%);
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 30% 100%, 0% 85%, 0% 15%);
                 height: 50px;
-                width: 17px;
+                width: 25px;
                 transform: translateX(70px);
-                transition: 1s transform ease-in-out;
+                transition: 0.5s transform ease-in-out;
             }
             .stickyNavHoverDiv:hover .pullout-bar {
-                transform: translateX(15px);
-                transition: 1s transform ease-in-out;
+                transform: translateX(25px);
+                transition: 0.5s transform ease-in-out;
             }
             .pullout-bar div {
                 position: absolute;
@@ -647,6 +676,7 @@ javascript: (() => {
         });
 
         </script></body></html>`;
+        clearAlert();
         newWindow.document.open();
         newWindow.document.write(htmlContent);
         newWindow.document.close();
