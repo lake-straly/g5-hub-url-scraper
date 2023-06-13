@@ -346,6 +346,80 @@ javascript: (() => {
                 margin: 0;
                 padding: 0.5em;
             }
+            .stickyNavHoverDiv {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                height: 123px;
+                width: 17px;
+            }
+            .sticky-nav {
+                position: fixed;
+                opacity: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                width: 50px;
+                height: 103px;
+                right: 10px;
+                bottom: 10px;
+                background-color: var(--primary-clr);
+                border-radius: 27px;
+                padding: 5px;
+                transform: translateX(70px);
+                transition: 1s transform ease-in-out, 5s opacity ease-in-out;
+            }
+            .stickyNavHoverDiv:hover .sticky-nav {
+                opacity: 1;
+                right: 10px;
+                transform: translateX(0px);
+                transition: 1s transform ease-in-out;
+            }
+            .sticky-nav div {
+                width: 46px;
+                height: 46px;
+                background-color: #58798D;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 50px;
+                border-radius: 50%;
+                color: #fff;
+                cursor: pointer;
+                transition: 0.15s all ease-in-out;
+            }
+            .sticky-nav div:hover {
+                color: #303030;
+                background-color: #30a4b3;
+                transition: 0.15s all ease-in-out;
+            }
+            .stickyNavHoverDiv .pullout-bar {
+                position: absolute;
+                bottom: 37.5px;
+                right: 65px;
+                background-color: var(--primary-clr);
+                clip-path: polygon(25% 0, 100% 0, 100% 100%, 25% 100%, 0% 85%, 0% 15%);
+                height: 50px;
+                width: 17px;
+                transform: translateX(70px);
+                transition: 1s transform ease-in-out;
+            }
+            .stickyNavHoverDiv:hover .pullout-bar {
+                transform: translateX(15px);
+                transition: 1s transform ease-in-out;
+            }
+            .pullout-bar div {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                height: 50%;
+                width: 10%;
+                background-color: rgba(51, 51, 51, 0.65);
+            }
+            .pullout-bar div:first-of-type {
+                left: 25%;
+            }
           </style>
         </head>
         <body>
@@ -403,6 +477,13 @@ javascript: (() => {
             <p class="credits-header">Tool created by:</p>
             <p class="credits-name">Lake Straly</p>
             <p class="credits-name">Logan Straly</p>
+        </div>
+        <div class="stickyNavHoverDiv">
+            <div class="pullout-bar"><div></div><div></div></div>
+            <div class="sticky-nav">
+                <div class="up-arrow">&#8593</div>
+                <div class="down-arrow">&#8595</div>
+            </div>
         </div>
         <script type="text/javascript">
         function copyAllNames() {
@@ -543,6 +624,28 @@ javascript: (() => {
             }
         }
         updateLocationLinks();
+        let stickyNavAnchors = document.querySelectorAll('.sticky-nav div');
+        let stickyNavUp = document.querySelector('.sticky-nav .up-arrow');
+        let stickyNavDown = document.querySelector('.sticky-nav .down-arrow');
+
+        stickyNavAnchors.forEach((item) => {
+            item.addEventListener('click', () => {
+                if (item.innerText === '&#8593' || item.innerText === '↑') {
+                    window.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "smooth"
+                      });
+                } else if (item.innerText === '&#8595' || item.innerText === '↓') {
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        left: 0,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
         </script></body></html>`;
         newWindow.document.open();
         newWindow.document.write(htmlContent);
