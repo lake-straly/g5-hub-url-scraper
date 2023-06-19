@@ -67,6 +67,8 @@ javascript: (() => {
         }, 3000);
     }
 
+    /* Get client name from Hub page */
+    let clientName = document.querySelector('div.h-card > h2 > a.u-uid').innerHTML;
     /* Get URN from client Hub page */
     let clientUrn = document.querySelector('.p-g5-urn');
     /* Get the domain type. This is important to determine how the final URLs are constructed */
@@ -256,7 +258,7 @@ javascript: (() => {
         /* Open blank web page with all of the URLs collected */
         var newWindow = window.open();
         var htmlContent = `<!DOCTYPE html><html><head>
-          <title>URL Scraper</title>
+          <title>Scraped - ${clientName}</title>
           <link rel="icon" type="image/x-icon" href="https://g5-assets-cld-res.cloudinary.com/image/upload/q_auto,f_auto,fl_lossy/e_colorize,co_white/v1686244719/g5/g5-c-5jqt5m1l7-g5-wis-team-cms/g5-cl-1lshjewwoa-g5-wis-team-cms-test-bed-bend-or/uploads/scraper_zjeifx.png">
           <style>
             :root {
@@ -452,7 +454,7 @@ javascript: (() => {
           </style>
         </head>
         <body>
-            <h1>URL Scraper</h1>
+            <h1>Scraped - ${clientName}</h1>
             <div class="headerButton">
                 <button onclick="copySelectedUrls()">Copy Selected Cells</button>
             </div>
