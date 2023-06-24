@@ -60,205 +60,264 @@ javascript: (() => {
 
     function clearAlert() {
         let alertDiv = document.getElementById('alertDiv');
-        alertDiv.style.transition = 'opacity 1s ease-in-out';
-        alertDiv.style.opacity = '0';
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 3000);
+        if (alertDiv) {
+            alertDiv.style.transition = 'opacity 1s ease-in-out';
+            alertDiv.style.opacity = '0';
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
     }
 
-    /* Get client name from Hub page */
-    let clientName = document.querySelector('div.h-card > h2 > a.u-uid').innerHTML;
-    /* Get URN from client Hub page */
-    let clientUrn = document.querySelector('.p-g5-urn');
-    /* Get the domain type. This is important to determine how the final URLs are constructed */
-    let domainType = document.querySelector('.p-g5-domain-type');
-    /* Get the vertical of the client */
-    let clientVertical = document.querySelector('.p-g5-vertical');
+    function isClientHubPage() {
+        const pattern = /^hub\.g5marketingcloud\.com\/admin\/clients\/[a-z0-9-]+$/;
+        const currentURL = window.location.href.replace(/^(https?:\/\/)/, '');
+        return pattern.test(currentURL);
+    }
 
-    /* Sanitize domain function. Removes special characters in a domain path, and removes special characters at the end of a domain path if present */
-    function sanitizeDomain(url) {
-        if (url.length <= 0 || url === null || url == '' || url === undefined) {
-            return 'undefined';
+    let clientData;
+    if (!isClientHubPage()) {
+        console.error('Please make sure you\'re on the G5 client Hub page.');
+        window.alert('Please make sure you\'re on the G5 client Hub page.');
+    } else {
+        clientData = {
+            name: document.querySelector('div.h-card > h2 > a.u-uid').innerText,
+            urn: document.querySelector('.p-g5-urn').innerText,
+            domainType: document.querySelector('.p-g5-domain-type').innerText,
+            vertical: document.querySelector('.p-g5-vertical').innerText,
+        };
+        if (clientData.domainType.toLowerCase().includes('single')) {
+            clientData.domain = document.querySelector('.u-g5-domain').innerText;
+        }
+    }
+
+    async function fetchDataRecursive() {
+        let pageIteration = 1;
+        let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
+
+        async function getJsonData(url) {
+            let fetchResult = await fetch(url);
+            if (!fetchResult.ok) {
+                throw new Error(`Error fetching data from ${url}: ${fetchResult.status} ${fetchResult.statusText}`);
+            }
+            let json = await fetchResult.json();
+            return json;
+        }
+
+        async function fetchAndStoreData(url, jsonData = [], pageIteration) {
+            try {
+                let json = await getJsonData(url);
+                jsonData.push(...json);
+                pageIteration++;
+                let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
+                return fetchAndStoreData(nextUrl, jsonData, pageIteration);
+            } catch (error) {
+                console.error(error);
+            }
+            return jsonData;
+        }
+        return fetchAndStoreData(locationsJsonUrl, [], pageIteration);
+    }
+
+    function removeSpecialChars(str) {
+        return str.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
+    }
+
+    function determineVertical() {
+        let vertical = clientData.vertical;
+
+        switch (true) {
+            case vertical.includes('Apartments'):
+                return 'apartments';
+                case vertical.includes('Senior'):
+                return 'senior-living';
+                case vertical.includes('Storage'):
+                return 'self-storage';
+            default:
+                console.error('Was not able to detect a valid vertical!');
+                return 'Was not able to detect a valid vertical!';
+        }
+    }
+
+    function determineDomainType() {
+        let domainType = clientData.domainType;
+        if (domainType === 'SingleDomainClient') {
+            return 'singleDomain';
+        } else if (domainType === 'MultiDomainClient') {
+            return 'multiDomain';
         } else {
-            const domainRegex = /^(\w+:\/\/[^\/]+)(.*)/;
-            const matches = url.match(domainRegex);
-            const domain = matches[1];
-            let path = matches[2];
-            path = path.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
-            const modifiedUrl = domain + path;
-            return modifiedUrl.toLowerCase();
+            console.error('Unable to determine domain type!');
+            return 'Unable to determine domain type!'
         }
     }
 
-    let pageIteration = 1;
-    let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
-
-    /* Get JSON data from the specified URL */
-    async function getJsonData(url) {
-        let fetchResult = await fetch(url);
-        if (!fetchResult.ok) {
-            throw new Error(`Error fetching data from ${url}: ${fetchResult.status} ${fetchResult.statusText}`);
+    function extractTLD(domain) {
+        const regex = /\.([^.\/]+)$/;
+        const match = domain.match(regex);
+        if (match && match[1]) {
+            return match[1];
         }
-        let json = await fetchResult.json();
-        return json;
+        return '';
     }
 
-    /* Recursive function to fetch data, increase pageIteration, and run again */
-    async function fetchAndStoreData(url, jsonData = []) {
-        try {
-            let json = await getJsonData(url);
-            jsonData.push(...json);
-            pageIteration++;
-            let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientUrn.innerText}/locations.json?order=name_asc&page=${pageIteration}`;
-            return fetchAndStoreData(nextUrl, jsonData);
-        } catch (error) {
-            console.error(error);
+    function extractDomainName(url) {
+        const regex = /^(?:https?:\/\/)?(?:[^:\/\n]+\.)?([^:\/\n.]+\.[^:\/\n.]+)(?:\/|$)/i;
+        const match = url.match(regex);
+        if (match && match[1]) {
+            const domainWithTLD = match[1];
+            const dotIndex = domainWithTLD.lastIndexOf('.');
+            if (dotIndex !== -1) {
+                return domainWithTLD.slice(0, dotIndex);
+            }
+            return domainWithTLD;
         }
-        return jsonData;
+        return '';
+      }
+
+    function extractSubdomain(url) {
+        const regex = /^(?:https?:\/\/)?([^:\/\n]+\.)?([^:\/\n]+\.[^:\/\n]+)\b/i;
+        const match = url.match(regex);
+        if (match && match[1]) {
+            return match[1].replace('.', '');
+        }
+        return '';
+    }
+    
+    function parseData(jsonData) {
+        let locationsArr = [];
+        if (determineDomainType() === 'multiDomain') {
+            jsonData.forEach((location) => {
+                let locationInfo = {
+                    name: location.name,
+                    internalName: location.internal_branded_name,
+                    status: location.status,
+                    url: location.naked_domain,
+                    isCorp: location.corporate
+                };
+                locationsArr.push(locationInfo);
+            });
+            return locationsArr;
+        } else if (determineDomainType() === 'singleDomain') {
+            let domain = clientData.domain;
+            jsonData.forEach((location) => {
+                let locationInfo = {
+                    name: location.name,
+                    internalName: location.internalName,
+                    status: location.status,
+                    url: domain,
+                    path: removeSpecialChars(`${determineVertical()}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase()),
+                    isCorp: location.corporate
+                };
+                locationsArr.push(locationInfo);
+            });
+            return locationsArr;
+        }
     }
 
-    /* In order to use the data returned by fetch, we have to parse the data in an async function. */
-    async function parseJsonData(domainType, clientVertical) {
-        /* Determine what the vertical is */
-        let clientVerticalSlug = '';
-        let jsonData = await fetchAndStoreData(locationsJsonUrl);
-        if (clientVertical.innerText.includes('Apartments')) {
-            clientVerticalSlug = 'apartments';
-        } else if (clientVertical.innerText.includes('Senior')) {
-            clientVerticalSlug = 'senior-living';
-        } else if (clientVertical.innerText.includes('Storage')) {
-            clientVerticalSlug = 'self-storage';
-        } else {
-            console.error('Was not able to detect a valid vertical!');
-        }
-
-        /* If single domain, grab the domain */
-        let singleDomainDomain = document.querySelector('.u-g5-domain');
-        if (domainType.innerText === 'SingleDomainClient') {
-            singleDomainDomain = singleDomainDomain.innerText.split('://').pop();
-        }
-
-        /* Extract data from the location JSON */
-        let fullLocationData = [];
-        for (let i = 0; i < jsonData.length; i++) {
-            let locationDataObj = {
-                name: jsonData[i].name,
-                internalName: jsonData[i].internal_branded_name,
-                status: jsonData[i].status,
-                vertical: clientVerticalSlug,
-                state: jsonData[i].state,
-                city: jsonData[i].city,
-                custom_slug: jsonData[i].custom_slug,
-                naked_domain: jsonData[i].naked_domain,
-                corporate: jsonData[i].corporate
-            };
-            fullLocationData.push(locationDataObj);
-        }
-
-        /* Determine what type of URL to build, and then build it (LIVE) */
-        let liveUrls = [];
-        let staticUrls = [];
-        let stagingUrls = [];
-        if (domainType.innerText === 'MultiDomainClient') {
-            for (let j = 0; j < fullLocationData.length; j++) {
-                if (fullLocationData[j].naked_domain === null || fullLocationData[j].naked_domain === '') {
-                    console.log(`${fullLocationData[j].name} does not have a valid domain.`);
-                    let invalidLiveUrlsObj = {
-                        name: fullLocationData[j].name,
-                        internalName: fullLocationData[j].internalName,
-                        status: fullLocationData[j].status,
-                        url: 'null'
-                    };
-                    liveUrls.push(invalidLiveUrlsObj);
+    function buildLiveUrl(url, path, corp) {
+        if (determineDomainType() === 'singleDomain') {
+            if (path.length <= 0 || corp) {
+                return `${url}`
+            } else {
+                return `${url}/${path}`
+            }
+        } else if (determineDomainType() === 'multiDomain') {
+            if (url == null || url == undefined) {
+                    return 'undefined'
                 } else {
-                    if (fullLocationData[j].naked_domain.split('.').length <= 2) {
-                        fullLocationData[j].naked_domain = 'www.' + fullLocationData[j].naked_domain;
+                let urlParts = url.split('.');
+                if (urlParts.length < 3 && !url.includes('www.')) {
+                    return `https://www.${url}`
+                } else if (urlParts.length >= 3) {
+                    return `https://${url}`
+                }
+            }
+        }
+    }
+    function buildStaticUrl(url, path, corp) {
+        if (determineDomainType() === 'singleDomain') {
+            url = url.replace('https://', 'http://');
+            url = `${url}.g5static.com`;
+            if (path.length <= 0 || corp) {
+                return `${url}`;
+            } else {
+                return `${url}/${path}`;
+            }
+        } else if (determineDomainType() === 'multiDomain') {
+            if (url == null || url == undefined) {
+                    return 'undefined'
+                } else {
+                let urlParts = url.split('.');
+                if (urlParts.length < 3 && !url.includes('www.')) {
+                    return `http://www.${url}.g5static.com`;
+                } else if (urlParts.length >= 3) {
+                    return `http://${url}.g5static.com`;
+                }
+            }
+        }
+    }
+
+    function buildStagingUrl(url, path, corp) {
+        if (url == null || url == undefined) {
+            return 'undefined'
+        } else {
+            let tld = extractTLD(url);
+            let domainName = extractDomainName(url);
+            let subDomain = extractSubdomain(url);
+            if (subDomain.length > 0) {
+                url = `http://${subDomain}.${domainName}-staging.${tld}.g5static.com`;
+            } else {
+                url = `http://www.${domainName}-staging.${tld}.g5static.com`;
+            }
+            if (determineDomainType() === 'singleDomain') {
+                if (corp) {
+                    return `${url}`;
+                } else {
+                    if (path.length > 0) {
+                        return `${url}/${path}`;
+                    } else {
+                        return `${url}`;
                     }
-                    let liveUrlsObj = {
-                        name: fullLocationData[j].name,
-                        internalName: fullLocationData[j].internalName,
-                        status: fullLocationData[j].status,
-                        url: 'https://' + fullLocationData[j].naked_domain
-                    };
-                    liveUrls.push(liveUrlsObj);
                 }
+            } else if (determineDomainType() === 'multiDomain') {
+                return url;
             }
-        } else if (domainType.innerText === 'SingleDomainClient') {
-            for (let k = 0; k < fullLocationData.length; k++) {
-                if (fullLocationData[k].corporate) {
-                    let liveUrlsObj = {
-                        name: fullLocationData[k].name,
-                        status: fullLocationData[k].status,
-                        internalName: fullLocationData[k].internalName,
-                        url: 'https://' + singleDomainDomain
-                    };
-                    liveUrls.unshift(liveUrlsObj);
-                } else {
-                    let liveUrlsObj = {
-                        name: fullLocationData[k].name,
-                        internalName: fullLocationData[k].internalName,
-                        status: fullLocationData[k].status,
-                        url: sanitizeDomain('https://' + singleDomainDomain + '/' + fullLocationData[k].vertical + '/' + fullLocationData[k].state + '/' + fullLocationData[k].city + '/' + fullLocationData[k].custom_slug)
-                    };
-                    liveUrls.push(liveUrlsObj);
-                }
-            }
-        } else {
-            console.error(`URL CONSTRUCTION FAILED - Unable to locate domain type of: ${domainType.innerText}`);
         }
+    }
 
-        /* Build static URLs using the previously built live URLs */
-        for (let l = 0; l < liveUrls.length; l++) {
-            if (liveUrls[l].url == 'null') {
-                let staticUrlsObj = {
-                    name: liveUrls[l].name,
-                    internalName: fullLocationData[l].internalName,
-                    status: fullLocationData[l].status,
-                    url: liveUrls[l].url
-                };
-                staticUrls.push(staticUrlsObj);
+    async function buildUrls() {
+        let jsonData = await fetchDataRecursive();
+        let locations = parseData(jsonData);
+
+        let finalLocInfo = [];
+        locations.forEach((location) => {
+            let locationInfo = {
+                name: location.name,
+                internalName: location.internalName,
+                status: location.status,
+                liveUrl: buildLiveUrl(location.url, location.path, location.isCorp),
+                staticUrl: buildStaticUrl(location.url, location.path, location.isCorp),
+                stagingUrl: buildStagingUrl(location.url, location.path, location.isCorp)
+            };
+            if (location.internalName !== undefined) {
+                locationInfo.internalName = location.internalName;
+            }
+            if (location.isCorp) {
+                finalLocInfo.unshift(locationInfo);
             } else {
-                let dotSplitLiveUrl = liveUrls[l].url.split('.').pop();
-                let tld = dotSplitLiveUrl.split('/')[0];
-                let nonSecureLiveUrl = liveUrls[l].url.replace('https', 'http');
-                let staticUrlsObj = {
-                    name: liveUrls[l].name,
-                    internalName: fullLocationData[l].internalName,
-                    status: fullLocationData[l].status,
-                    url: sanitizeDomain(nonSecureLiveUrl.replace(tld, tld + '.g5static.com'))
-                };
-                staticUrls.push(staticUrlsObj);
+                finalLocInfo.push(locationInfo);
             }
-        }
+        });
+        return finalLocInfo;
+    }
 
-        /* Build staging URLs using the previously built live URLs */
-        for (let m = 0; m < staticUrls.length; m++) {
-            if (liveUrls[m].url == 'null') {
-                let stagingUrlsObj = {
-                    name: liveUrls[m].name,
-                    internalName: fullLocationData[m].internalName,
-                    status: fullLocationData[m].status,
-                    url: liveUrls[m].url
-                };
-                stagingUrls.push(stagingUrlsObj);
-            } else {
-                let mainDomain = staticUrls[m].url.split('.')[1];
-                let nonSecureStatic = staticUrls[m].url.replace('https', 'http');
-                let stagingUrlsObj = {
-                    name: liveUrls[m].name,
-                    internalName: fullLocationData[m].internalName,
-                    status: fullLocationData[m].status,
-                    url: sanitizeDomain(nonSecureStatic.replace(mainDomain, mainDomain + '-staging'))
-                };
-                stagingUrls.push(stagingUrlsObj);
-            }
-        }
+    async function createHtmlPage() {
+        let locInfo = await buildUrls();
+        console.log(locInfo);
 
-        /* Open blank web page with all of the URLs collected */
         var newWindow = window.open();
         var htmlContent = `<!DOCTYPE html><html><head>
-          <title>Scraped - ${clientName}</title>
+          <title>Scraped - ${clientData.name}</title>
           <link rel="icon" type="image/x-icon" href="https://g5-assets-cld-res.cloudinary.com/image/upload/q_auto,f_auto,fl_lossy/e_colorize,co_white/v1686244719/g5/g5-c-5jqt5m1l7-g5-wis-team-cms/g5-cl-1lshjewwoa-g5-wis-team-cms-test-bed-bend-or/uploads/scraper_zjeifx.png">
           <style>
             :root {
@@ -275,7 +334,7 @@ javascript: (() => {
                 margin: 0 auto;
                 text-align: center;
             }
-            .url-cell a {
+            .urlCell a {
                 line-break: anywhere;
             }
             a {
@@ -288,7 +347,7 @@ javascript: (() => {
                 border-collapse: collapse;
                 width: 100%;
             }
-            td:not(:has(> div.status-cell)) {
+            td:not(:has(> div.statusCell)) {
                 min-width: 19ch;
             }
             table td, table th {
@@ -347,11 +406,11 @@ javascript: (() => {
                 font-size: 0.45em;
                 color: #fff;
             }
-            .url-cell, .name-cell, .undefinedDiv {
+            td div {
                 display: flex;
                 align-items: center;
             }
-            .name-cell button, .url-cell button, .undefinedDiv button {
+            .nameCell button, .urlCell button, .undefinedDiv button, .internalNameCell button {
                 margin-left: auto;
                 margin-right: 0;
             }
@@ -454,7 +513,7 @@ javascript: (() => {
           </style>
         </head>
         <body>
-            <h1>Scraped - ${clientName}</h1>
+            <h1>Scraped - ${clientData.name}</h1>
             <div class="headerButton">
                 <button onclick="copySelectedUrls()">Copy Selected Cells</button>
             </div>
@@ -468,34 +527,50 @@ javascript: (() => {
                         <th class="table-header"><div class="header-cell">Static Urls<button onclick="copyAllStaticUrls()">Copy All</button></div></th>
                         <th class="table-header"><div class="header-cell">Staging Urls<button onclick="copyAllStagingUrls()">Copy All</button></div></th>
                     </tr>`;
-        for (let i = 0; i < liveUrls.length; i++) {
-            if (liveUrls[i].url == 'null') {
-                htmlContent += `<tr class="undefinedLocation ${liveUrls[i].status.toLowerCase()}Location">`
-            } else {
-                htmlContent += `<tr class="${liveUrls[i].status.toLowerCase()}Location">`
-            }
-            htmlContent += `<td><div class="status-cell"><div class="${liveUrls[i].status.toLowerCase()}StatusCell"><div class="info">${liveUrls[i].status}</div></div></div></td>
-            <td><div class="name-cell locName"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].name}"></input><div class="info">${liveUrls[i].name}</div><button onclick="copyToClipboard('${liveUrls[i].name.replace(/'/g, "\\'")}')">Copy</button></td></div>
-            <td><div class="name-cell locInternalName">`;
-            if (liveUrls[i].internalName !== null && liveUrls[i].internalName.length > 0) {
-                htmlContent += `<input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].internalName}"></input><div class="info">${liveUrls[i].internalName}</div><button onclick="copyToClipboard('${liveUrls[i].internalName.replace(/'/g, "\\'")}')">Copy</button>`
-            }
-            htmlContent += `</td></div>`;
-            if (liveUrls[i].url == 'null') {
-                htmlContent += `<td class="liveCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
-                <td class="staticCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
-                <td class="stagingCell"><div class="undefinedDiv"><input class="nameCheckbox ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><p class="url-cell undefinedUrl info">undefined</p><button onclick="copyToClipboard('undefined')">Copy</button></div></td>
-                </tr>`;    
-            } else {
-                htmlContent += `<td class="liveCell"><div class="url-cell"><input class="urlCheckbox liveUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${liveUrls[i].url}"></input><a target="_blank" class="info liveUrl" href="${liveUrls[i].url}">${liveUrls[i].url}</a><button onclick="copyToClipboard('${liveUrls[i].url}')">Copy</button></div></td>
-                <td class="staticCell"><div class="url-cell"><input class="urlCheckbox staticUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${staticUrls[i].url}"></input><a target="_blank" class="info staticUrl" href="${staticUrls[i].url}">${staticUrls[i].url}</a><button onclick="copyToClipboard('${staticUrls[i].url}')">Copy</button></div></td>
-                <td class="stagingCell"><div class="url-cell"><input class="urlCheckbox stagingUrl ${i}" type="checkBox" onchange="createCheckboxArray(this)" value="${stagingUrls[i].url}"></input><a target="_blank" class="info stagingUrl" href="${stagingUrls[i].url}">${stagingUrls[i].url}</a><button onclick="copyToClipboard('${stagingUrls[i].url}')">Copy</button></div></td>
-                </tr>`;
-            }
-        }
-        htmlContent += `</table>
-        </div>
-        <div class="rp_disclaimer">
+                        locInfo.forEach((location) => {
+                            if (location.liveUrl === 'undefined' || location.liveUrl === undefined || location.liveUrl === null) {
+                                if (location.status === 'Live') {
+                                    htmlContent += `<tr class="undefinedLocation liveLocation">`;
+                                } else if (location.status === 'Pending') {
+                                    htmlContent += `<tr class="undefinedLocation pendingLocation">`;
+                                } else if (location.status === 'Deleted') {
+                                    htmlContent += `<tr class="undefinedLocation deletedLocation">`;
+                                } else {
+                                    htmlContent += `<tr>`;
+                                }
+                            } else {
+                                if (location.status === 'Live') {
+                                    htmlContent += `<tr class="liveLocation">`;
+                                } else if (location.status === 'Pending') {
+                                    htmlContent += `<tr class="pendingLocation">`;
+                                } else if (location.status === 'Deleted') {
+                                    htmlContent += `<tr class="deletedLocation">`;
+                                } else {
+                                    htmlContent += `<tr>`;
+                                }
+                            }
+
+                            htmlContent += `<td><div class="statusCell">${location.status}</div></td>`;
+                            htmlContent += `<td><div class="nameCell"><input class="nameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.name}"></input>${location.name}<button onclick="copyToClipboard('${location.name}')">Copy</button></div></td>`;
+                            if (location.internalName === 'undefined' || location.internalName === undefined || location.internalName === null || location.internalName === '') {
+                                htmlContent += `<td><div class="internalNameCell"></div></td>`;
+                            } else {
+                                htmlContent += `<td><div class="internalNameCell"><input class="internalNameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.internalName}"></input>${location.internalName}<button onclick="copyToClipboard('${location.internalName}')">Copy</button></div></td>`;
+                            }
+                            if (location.liveUrl === 'undefined' || location.liveUrl === undefined || location.liveUrl === null) {
+                                htmlContent += `<td><div class="undefined liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="undefined staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="undefined stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                            } else {
+                                htmlContent += `<td><div class="liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.liveUrl}"></input><a href="${location.liveUrl}" target="_blank">${location.liveUrl}</a><button onclick="copyToClipboard('${location.liveUrl}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.staticUrl}"></input><a href="${location.staticUrl}" target="_blank">${location.staticUrl}</a><button onclick="copyToClipboard('${location.staticUrl}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.stagingUrl}"></input><a href="${location.stagingUrl}" target="_blank">${location.stagingUrl}</a><button onclick="copyToClipboard('${location.stagingUrl}')">Copy</button></div></td>`;
+                            }
+                            htmlContent += `</tr>`;
+                        });
+                    htmlContent += `</table>
+            </div>
+            <div class="rp_disclaimer">
             <p>REALPAGE INTERNAL USE ONLY</p>
         </div>
         <div class="legend">
@@ -518,7 +593,7 @@ javascript: (() => {
         </div>
         <script type="text/javascript">
         function copyAllNames() {
-            let namesArr = document.querySelectorAll('tr:not(.disabled) .locName .info');
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .nameCell:not(button)');
             let names = [];
             for (let i = 0; i < namesArr.length; i++) {
                 names.push(namesArr[i].innerText);
@@ -526,7 +601,7 @@ javascript: (() => {
             copyToClipboard(names.join('\\n'));
         }
         function copyAllInternalNames() {
-            let namesArr = document.querySelectorAll('tr:not(.disabled) .locInternalName .info');
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .internalNameCell');
             let names = [];
             for (let i = 0; i < namesArr.length; i++) {
                 names.push(namesArr[i].innerText);
@@ -534,7 +609,7 @@ javascript: (() => {
             copyToClipboard(names.join('\\n'));
         }
         function copyAllLiveUrls() {
-            let liveUrlsArr = document.querySelectorAll('tr:not(.disabled) .liveCell .info');
+            let liveUrlsArr = document.querySelectorAll('tr:not(.disabled) .liveCell');
             let liveUrls = [];
             for (let i = 0; i < liveUrlsArr.length; i++) {
                 liveUrls.push(liveUrlsArr[i].innerText);
@@ -542,7 +617,7 @@ javascript: (() => {
             copyToClipboard(liveUrls.join('\\n'));
         }
         function copyAllStaticUrls() {
-            let staticUrlsArr = document.querySelectorAll('tr:not(.disabled) .staticCell .info');
+            let staticUrlsArr = document.querySelectorAll('tr:not(.disabled) .staticCell');
             let staticUrls = [];
             for (let i = 0; i < staticUrlsArr.length; i++) {
                 staticUrls.push(staticUrlsArr[i].innerText);
@@ -550,7 +625,7 @@ javascript: (() => {
             copyToClipboard(staticUrls.join('\\n'));
         }
         function copyAllStagingUrls() {
-            let stagingUrlsArr = document.querySelectorAll('tr:not(.disabled) .stagingCell .info');
+            let stagingUrlsArr = document.querySelectorAll('tr:not(.disabled) .stagingCell');
             let stagingUrls = [];
             for (let i = 0; i < stagingUrlsArr.length; i++) {
                 stagingUrls.push(stagingUrlsArr[i].innerText);
@@ -683,5 +758,5 @@ javascript: (() => {
         newWindow.document.write(htmlContent);
         newWindow.document.close();
     }
-    parseJsonData(domainType, clientVertical);
+    createHtmlPage();
 })();
