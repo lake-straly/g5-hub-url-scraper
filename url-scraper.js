@@ -120,7 +120,10 @@ javascript: (() => {
     }
 
     function removeSpecialChars(str) {
-        return str.replace(/[^A-Za-z0-9\/]+$/g, "").replace(/[^A-Za-z0-9\/]/g, "-");
+        str = str.replace(/[^A-Za-z0-9\/]+$/g, "");
+        str = str.replace(/[^A-Za-z0-9\/]/g, "-");
+        str = str.replace("--", "-");
+        return str;
     }
 
     function determineVertical() {
@@ -558,13 +561,13 @@ javascript: (() => {
                                 htmlContent += `<td><div class="internalNameCell"><input class="internalNameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.internalName}"></input>${location.internalName}<button onclick="copyToClipboard('${location.internalName}')">Copy</button></div></td>`;
                             }
                             if (location.liveUrl === 'undefined' || location.liveUrl === undefined || location.liveUrl === null) {
-                                htmlContent += `<td><div class="undefined liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
-                                htmlContent += `<td><div class="undefined staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
-                                htmlContent += `<td><div class="undefined stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input>undefined<button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="undefined liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><span class="info">undefined</span><button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="undefined staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><span class="info">undefined</span><button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="undefined stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><span class="info">undefined</span><button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
                             } else {
-                                htmlContent += `<td><div class="liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.liveUrl}"></input><a href="${location.liveUrl}" target="_blank">${location.liveUrl}</a><button onclick="copyToClipboard('${location.liveUrl}')">Copy</button></div></td>`;
-                                htmlContent += `<td><div class="staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.staticUrl}"></input><a href="${location.staticUrl}" target="_blank">${location.staticUrl}</a><button onclick="copyToClipboard('${location.staticUrl}')">Copy</button></div></td>`;
-                                htmlContent += `<td><div class="stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.stagingUrl}"></input><a href="${location.stagingUrl}" target="_blank">${location.stagingUrl}</a><button onclick="copyToClipboard('${location.stagingUrl}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.liveUrl}"></input><span class="info"><a href="${location.liveUrl}" target="_blank">${location.liveUrl}</a></span><button onclick="copyToClipboard('${location.liveUrl}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="staticCell urlCell"><input class="staticUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.staticUrl}"></input><span class="info"><a href="${location.staticUrl}" target="_blank">${location.staticUrl}</a></span><button onclick="copyToClipboard('${location.staticUrl}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="stagingCell urlCell"><input class="stagingUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.stagingUrl}"></input><span class="info"><a href="${location.stagingUrl}" target="_blank">${location.stagingUrl}</a></span><button onclick="copyToClipboard('${location.stagingUrl}')">Copy</button></div></td>`;
                             }
                             htmlContent += `</tr>`;
                         });
@@ -593,7 +596,7 @@ javascript: (() => {
         </div>
         <script type="text/javascript">
         function copyAllNames() {
-            let namesArr = document.querySelectorAll('tr:not(.disabled) .nameCell:not(button)');
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .nameCell .info');
             let names = [];
             for (let i = 0; i < namesArr.length; i++) {
                 names.push(namesArr[i].innerText);
@@ -601,7 +604,7 @@ javascript: (() => {
             copyToClipboard(names.join('\\n'));
         }
         function copyAllInternalNames() {
-            let namesArr = document.querySelectorAll('tr:not(.disabled) .internalNameCell');
+            let namesArr = document.querySelectorAll('tr:not(.disabled) .internalNameCell .info');
             let names = [];
             for (let i = 0; i < namesArr.length; i++) {
                 names.push(namesArr[i].innerText);
@@ -609,7 +612,7 @@ javascript: (() => {
             copyToClipboard(names.join('\\n'));
         }
         function copyAllLiveUrls() {
-            let liveUrlsArr = document.querySelectorAll('tr:not(.disabled) .liveCell');
+            let liveUrlsArr = document.querySelectorAll('tr:not(.disabled) .liveCell .info a');
             let liveUrls = [];
             for (let i = 0; i < liveUrlsArr.length; i++) {
                 liveUrls.push(liveUrlsArr[i].innerText);
@@ -617,7 +620,7 @@ javascript: (() => {
             copyToClipboard(liveUrls.join('\\n'));
         }
         function copyAllStaticUrls() {
-            let staticUrlsArr = document.querySelectorAll('tr:not(.disabled) .staticCell');
+            let staticUrlsArr = document.querySelectorAll('tr:not(.disabled) .staticCell .info a');
             let staticUrls = [];
             for (let i = 0; i < staticUrlsArr.length; i++) {
                 staticUrls.push(staticUrlsArr[i].innerText);
@@ -625,7 +628,7 @@ javascript: (() => {
             copyToClipboard(staticUrls.join('\\n'));
         }
         function copyAllStagingUrls() {
-            let stagingUrlsArr = document.querySelectorAll('tr:not(.disabled) .stagingCell');
+            let stagingUrlsArr = document.querySelectorAll('tr:not(.disabled) .stagingCell .info a');
             let stagingUrls = [];
             for (let i = 0; i < stagingUrlsArr.length; i++) {
                 stagingUrls.push(stagingUrlsArr[i].innerText);
