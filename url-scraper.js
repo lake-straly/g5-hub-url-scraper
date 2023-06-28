@@ -554,11 +554,11 @@ javascript: (() => {
                             }
 
                             htmlContent += `<td><div class="statusCell">${location.status}</div></td>`;
-                            htmlContent += `<td><div class="nameCell"><input class="nameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.name}"></input>${location.name}<button onclick="copyToClipboard('${location.name}')">Copy</button></div></td>`;
+                            htmlContent += `<td><div class="nameCell"><input class="nameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.name}"></input><span class="info">${location.name}</span><button onclick="copyToClipboard('${location.name}')">Copy</button></div></td>`;
                             if (location.internalName === 'undefined' || location.internalName === undefined || location.internalName === null || location.internalName === '') {
                                 htmlContent += `<td><div class="internalNameCell"></div></td>`;
                             } else {
-                                htmlContent += `<td><div class="internalNameCell"><input class="internalNameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.internalName}"></input>${location.internalName}<button onclick="copyToClipboard('${location.internalName}')">Copy</button></div></td>`;
+                                htmlContent += `<td><div class="internalNameCell"><input class="internalNameCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="${location.internalName}"></input><span class="info">${location.internalName}</span><button onclick="copyToClipboard('${location.internalName}')">Copy</button></div></td>`;
                             }
                             if (location.liveUrl === 'undefined' || location.liveUrl === undefined || location.liveUrl === null) {
                                 htmlContent += `<td><div class="undefined liveCell urlCell"><input class="liveUrlCheckbox" type="checkBox" onchange="createCheckboxArray(this)" value="undefined"></input><span class="info">undefined</span><button onclick="copyToClipboard('undefined')">Copy</button></div></td>`;
