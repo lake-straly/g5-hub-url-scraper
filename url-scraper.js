@@ -205,7 +205,7 @@ javascript: (() => {
             jsonData.forEach((location) => {
                 let locationInfo = {
                     name: location.name,
-                    internalName: location.internalName,
+                    internalName: location.internal_branded_name,
                     status: location.status,
                     url: domain,
                     path: removeSpecialChars(`${determineVertical()}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase()),
@@ -292,6 +292,8 @@ javascript: (() => {
         let jsonData = await fetchDataRecursive();
         let locations = parseData(jsonData);
 
+        console.log(locations);
+
         let finalLocInfo = [];
         locations.forEach((location) => {
             let locationInfo = {
@@ -302,9 +304,6 @@ javascript: (() => {
                 staticUrl: buildStaticUrl(location.url, location.path, location.isCorp),
                 stagingUrl: buildStagingUrl(location.url, location.path, location.isCorp)
             };
-            if (location.internalName !== undefined) {
-                locationInfo.internalName = location.internalName;
-            }
             if (location.isCorp) {
                 finalLocInfo.unshift(locationInfo);
             } else {
@@ -531,6 +530,7 @@ javascript: (() => {
                         <th class="table-header"><div class="header-cell">Staging Urls<button onclick="copyAllStagingUrls()">Copy All</button></div></th>
                     </tr>`;
                         locInfo.forEach((location) => {
+                            console.log(location);
                             if (location.liveUrl === 'undefined' || location.liveUrl === undefined || location.liveUrl === null) {
                                 if (location.status === 'Live') {
                                     htmlContent += `<tr class="undefinedLocation liveLocation">`;
