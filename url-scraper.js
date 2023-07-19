@@ -56,8 +56,7 @@ javascript: (() => {
         style.type = 'text/css';
         style.appendChild(document.createTextNode(css));
     }
-    functionStartAlert();
-
+    
     function clearAlert() {
         let alertDiv = document.getElementById('alertDiv');
         if (alertDiv) {
@@ -76,10 +75,7 @@ javascript: (() => {
     }
 
     let clientData;
-    if (!isClientHubPage()) {
-        console.error('Please make sure you\'re on the G5 client Hub page.');
-        window.alert('Please make sure you\'re on the G5 client Hub page.');
-    } else {
+    if (isClientHubPage()) {
         clientData = {
             name: document.querySelector('div.h-card > h2 > a.u-uid').innerText,
             urn: document.querySelector('.p-g5-urn').innerText,
@@ -362,6 +358,13 @@ javascript: (() => {
             }
             th button {
                 margin-left: 1em;
+            }
+            tr {
+                transition: background-color 0.2s ease-in-out;
+            }
+            tr:hover {
+                background-color: (255, 255, 255, 0.1);
+                transition: background-color 0.2s ease-in-out;
             }
             button {
                 height: fit-content;
@@ -761,5 +764,11 @@ javascript: (() => {
         newWindow.document.write(htmlContent);
         newWindow.document.close();
     }
-    createHtmlPage();
+    if (!isClientHubPage()) {
+        console.error('Please make sure you\'re on the G5 client Hub page.');
+        window.alert('Please make sure you\'re on the G5 client Hub page.');
+    } else {
+        createHtmlPage();
+        functionStartAlert();
+    }
 })();
