@@ -363,8 +363,8 @@ javascript: (() => {
                 transition: background-color 0.2s ease-in-out;
             }
             tr:hover {
-                background-color: (255, 255, 255, 0.1);
-                transition: background-color 0.2s ease-in-out;
+                background-color: rgba(255, 255, 255, 0.1);
+                transition: background-color 0.1s ease-in-out;
             }
             button {
                 height: fit-content;
