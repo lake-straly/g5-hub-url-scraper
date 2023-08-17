@@ -190,7 +190,8 @@ function parseData(jsonData) {
                 internalName: location.internal_branded_name,
                 status: location.status,
                 url: location.naked_domain,
-                isCorp: location.corporate
+                isCorp: location.corporate,
+                customVertical: location.custom_vertical
             };
             locationsArr.push(locationInfo);
         });
@@ -203,9 +204,14 @@ function parseData(jsonData) {
                 internalName: location.internal_branded_name,
                 status: location.status,
                 url: domain,
-                path: removeSpecialChars(`${determineVertical()}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase()),
-                isCorp: location.corporate
+                isCorp: location.corporate,
+                customVertical: location.custom_vertical
             };
+            if (location.customVertical.length > 0) {
+                locationInfo.path = removeSpecialChars(`${location.custom_vertical}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase());
+            } else {
+                locationInfo.path = removeSpecialChars(`${determineVertical()}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase());
+            }
             locationsArr.push(locationInfo);
         });
         return locationsArr;
