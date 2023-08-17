@@ -207,7 +207,7 @@ function parseData(jsonData) {
                 isCorp: location.corporate,
                 customVertical: location.custom_vertical
             };
-            if (location.customVertical.length > 0) {
+            if (location.custom_vertical.length > 0) {
                 locationInfo.path = removeSpecialChars(`${location.custom_vertical}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase());
             } else {
                 locationInfo.path = removeSpecialChars(`${determineVertical()}/${location.state}/${location.city}/${location.custom_slug}`.toLowerCase());
