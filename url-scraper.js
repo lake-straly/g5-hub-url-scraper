@@ -25,7 +25,7 @@ function functionStartAlert() {
     alertDiv.style.maxWidth = '400px';
     alertDiv.style.fontSize = '15px';
     alertDiv.style.color = 'white';
-    alertDiv.style.backgroundColor = 'rgb(163, 190, 140)';
+    alertDiv.style.backgroundColor = 'rgb(255, 100, 80)';
     alertDiv.style.cursor = 'pointer';
     alertDiv.style.transition = 'opacity 3s ease-in-out';
     alertDiv.style.opacity = '1';
