@@ -6,7 +6,7 @@ function functionStartAlert() {
     document.body.insertBefore(alertDiv, firstDiv);
 
     let alertText = document.createElement("p");
-    alertText.innerHTML = 'Hub Scraper started<br>It may take some time!<br>This alert will disappear when it is finised.<br><div class="cssLoader"></div>';
+    alertText.innerHTML = 'STAGING BRANCH<br>Hub Scraper started<br>It may take some time!<br>This alert will disappear when it is finised.<br><div class="cssLoader"></div>';
 
     alertDiv.appendChild(alertText);
     alertText.style.margin = '0';
@@ -25,7 +25,7 @@ function functionStartAlert() {
     alertDiv.style.maxWidth = '400px';
     alertDiv.style.fontSize = '15px';
     alertDiv.style.color = 'white';
-    alertDiv.style.backgroundColor = 'rgb(255, 100, 80)';
+    alertDiv.style.backgroundColor = 'rgb(110, 185, 220)';
     alertDiv.style.cursor = 'pointer';
     alertDiv.style.transition = 'opacity 3s ease-in-out';
     alertDiv.style.opacity = '1';
