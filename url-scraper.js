@@ -520,10 +520,42 @@ async function createHtmlPage() {
         .pullout-bar div:first-of-type {
             left: 25%;
         }
+        .searchInputContainer {
+            display: flex;
+            position: absolute;
+            justify-content: end;
+            align-items: center;
+            width: fit-content;
+            right: 3vw;
+        }
+        .searchInputContainer > label[for="searchInput"] {
+            margin-right: 1ch;
+        }
+        div#searchInputRegex {
+            height: 1em;
+            width: 1em;
+            text-align: center;
+            border: 1px solid white;
+            border-radius: 2px;
+            margin-left: 0.25ch;
+            padding: 0.15em;
+            font-size: 0.85em;
+            transition: all 0.25s ease-in-out;
+        }
+        div#searchInputRegex:hover {
+            cursor: pointer;
+            color: #000;
+            background-color: var(--primary-clr);
+            transition: all 0.25s ease-in-out;
+        }
+        .searchInputContainer > input#searchInput {
+            min-width: 20ch;
+        }
       </style>
     </head>
     <body>
         <h1>Scraped - ${clientData.name}</h1>
+        <form class="searchInputContainer"><label for="searchInput">Search: </label><input id="searchInput" type="text"><div id="searchInputRegex" data-value="unchecked" title="Enable Regex">.*</div></form>
         <div class="headerButton">
             <button onclick="copySelectedUrls()">Copy Selected Cells</button>
         </div>
@@ -603,6 +635,7 @@ async function createHtmlPage() {
         </div>
     </div>
     <script type="text/javascript">
+    let searchValue = '';
     function copyAllNames() {
         let namesArr = document.querySelectorAll('tr:not(.disabled) .nameCell .info');
         let names = [];
@@ -740,11 +773,11 @@ async function createHtmlPage() {
             }
         }
     }
-    updateLocationLinks();
     let stickyNavAnchors = document.querySelectorAll('.sticky-nav div');
     let stickyNavUp = document.querySelector('.sticky-nav .up-arrow');
     let stickyNavDown = document.querySelector('.sticky-nav .down-arrow');
 
+    updateLocationLinks();
     stickyNavAnchors.forEach((item) => {
         item.addEventListener('click', () => {
             if (item.innerText === '&#8593' || item.innerText === '↑') {
@@ -763,6 +796,39 @@ async function createHtmlPage() {
         });
     });
 
+    let searchFilterInput = document.getElementById('searchInput');
+    let searchFilterInputRegex = document.getElementById('searchInputRegex');
+    let tableRows = document.querySelectorAll('tr:not(.header)');
+
+    searchFilterInputRegex.addEventListener('click', () => {
+        let isChecked = searchFilterInputRegex.dataset.value === 'checked';
+        searchFilterInputRegex.dataset.value = isChecked ? 'unchecked' : 'checked';
+        searchFilterInputRegex.style.backgroundColor = isChecked ? '' : 'var(--primary-clr)';
+        searchFilterInputRegex.style.color = isChecked ? '' : '#000';
+        applySearchFilter();
+    });
+
+    searchFilterInput.addEventListener('input', applySearchFilter);
+
+    function applySearchFilter() {
+        let isChecked = searchFilterInputRegex.dataset.value === 'checked';
+        let searchValue = searchFilterInput.value.toLowerCase().trim();
+        let regex = isChecked ? new RegExp(searchValue, 'i') : null;
+
+        tableRows.forEach((row) => {
+            let cellValues = row.querySelectorAll('td > div span.info');
+            let found = Array.from(cellValues).some((value) => {
+                let text = value.textContent.toLowerCase();
+                return regex ? regex.test(text) : text.includes(searchValue);
+            });
+            row.style.display = found ? 'table-row' : 'none';
+            row.classList.toggle('disabled', !found);
+        });
+
+        if (searchValue.length === 0) {
+            updateLocationLinks();
+        }
+    }
     </script></body></html>`;
     clearAlert();
     newWindow.document.open();
