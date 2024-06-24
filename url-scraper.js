@@ -336,6 +336,7 @@ async function createHtmlPage() {
         h1 {
             margin: 0 auto;
             text-align: center;
+            max-width: 50ch;
         }
         .urlCell a {
             line-break: anywhere;
